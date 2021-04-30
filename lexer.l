@@ -42,6 +42,7 @@
 #define T_characters 1039
 #define T_string 1040
 
+int nested=0;
 
 %}
 
@@ -49,6 +50,9 @@ LL [A-Z]
 Ll [a-z]
 D [0-9]
 W [ \t\n\r]
+hex [0-9a-f]
+
+%x COMMENTS
 
 %option noyywrap
 
@@ -91,16 +95,22 @@ W [ \t\n\r]
 
 {LL}({LL}|{Ll}|{D}|_)* {return T_constructorid; }
 {Ll}({LL}|{Ll}|{D}|_)* {return T_id; }
-{D}+\.{D}+(e(\-|\+)?{D}+)? { return T_real; }
+{D}+\.{D}+((e|E)(\-|\+)?{D}+)? { return T_real; }
 {D}+ { return T_integer; }
-\'([^\'\"\\]|"\n"|"\t"|"\r"|"\0"|"\\"|"\'"|"\""|"\xnn")\' {return T_characters; }
-\".*\" { return T_string; }
+\'([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\|\\\'|\\\"|\\x{hex}{hex})\' {return T_characters; }
+\"([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\|\\\'|\\\"|\\x{hex}{hex})+\" { return T_string; }
 
 "->"|"+."|"-."|"*."|"/."|"**"|"&&"|"||"|"<>"|"<="|">="|"=="|"!="|":=" {return yytext[0]+yytext[1]; }
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:] { return yytext[0]; }
 
 {W}+ { /* nothing */ }
 "--".*\n { /* nothing */ } 
+"(*" { BEGIN(COMMENTS); nested++; }
+<COMMENTS>"(*" { nested++;}
+<COMMENTS>"*)" { nested--; if (nested == 0) BEGIN(INITIAL);}
+<COMMENTS>"*" { /* nothing */ }
+<COMMENTS>"(" { /* nothing */ }
+<COMMENTS>[^(*]+ { /* nothing */ }
 
 . { fprintf(stderr, "illegal character\n"); exit(1); }
 
