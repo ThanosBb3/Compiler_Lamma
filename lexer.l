@@ -42,14 +42,14 @@
 #define T_characters 1039
 #define T_string 1040
 
-int nested=0;
+int nested=0, lines=1;
 
 %}
 
 LL [A-Z]
 Ll [a-z]
 D [0-9]
-W [ \t\n\r]
+W [ \t\r]
 hex [0-9a-f]
 
 %x COMMENTS
@@ -104,15 +104,19 @@ hex [0-9a-f]
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:] { return yytext[0]; }
 
 {W}+ { /* nothing */ }
-"--".*\n { /* nothing */ } 
+"--".*\n { lines++; }
+"--".* { /* nothing */ }
+"\n" { lines++; }
 "(*" { BEGIN(COMMENTS); nested++; }
 <COMMENTS>"(*" { nested++;}
 <COMMENTS>"*)" { nested--; if (nested == 0) BEGIN(INITIAL);}
+<COMMENTS>"\n" { lines++; }
 <COMMENTS>"*" { /* nothing */ }
 <COMMENTS>"(" { /* nothing */ }
-<COMMENTS>[^(*]+ { /* nothing */ }
+<COMMENTS>[^(*\n]+ { /* nothing */ }
+<COMMENTS><<EOF>> { fprintf(stderr, "Error: EOF before comment-closing"); exit(1); }
 
-. { fprintf(stderr, "illegal character\n"); exit(1); }
+. { fprintf(stderr, "illegal character '%c' (ASCII: '%d') at line '%d'\n", yytext[0], yytext[0], lines); exit(1); }
 
 %%
 
