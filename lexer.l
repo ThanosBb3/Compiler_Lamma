@@ -1,46 +1,9 @@
 %{
+#include "lexer.hpp"
+#include "parser.hpp"
 
 #define T_eof 0
-#define T_and 1001
-#define T_array 1002
-#define T_begin 1003
-#define T_bool 1004
-#define T_char 1005
-#define T_delete 1006
-#define T_dim 1007
-#define T_do 1008
-#define T_done 1009
-#define T_downto 1010
-#define T_else 1011
-#define T_end 1012
-#define T_false 1013
-#define T_float 1014
-#define T_for 1015
-#define T_if 1016
-#define T_in 1017
-#define T_int 1018
-#define T_let 1019
-#define T_match 1020
-#define T_mod 1021
-#define T_mutable 1022
-#define T_new 1023
-#define T_not 1024
-#define T_of 1025
-#define T_rec 1026
-#define T_ref 1027
-#define T_then 1028
-#define T_to 1029
-#define T_true 1030
-#define T_type 1031
-#define T_unit 1032
-#define T_while 1033
-#define T_with 1034
-#define T_constructorid 1035
-#define T_id 1036
-#define T_real 1037
-#define T_integer 1038
-#define T_characters 1039
-#define T_string 1040
+
 
 int nested=0, lines=1;
 
@@ -116,14 +79,14 @@ hex [0-9a-f]
 <COMMENTS>[^(*\n]+ { /* nothing */ }
 <COMMENTS><<EOF>> { fprintf(stderr, "Error: EOF before comment-closing"); exit(1); }
 
-. { fprintf(stderr, "illegal character '%c' (ASCII: '%d') at line '%d'\n", yytext[0], yytext[0], lines); exit(1); }
+. { yyerror("illegal character"); }
 
 %%
 
-int main() {
+/*int main() {
     int token;
     do {
         token = yylex();
         printf("token=%d, lexeme=\"%s\"\n", token, yytext);
     } while (token != T_eof);
-}
+}*/
