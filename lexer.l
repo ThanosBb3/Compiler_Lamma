@@ -56,11 +56,11 @@ hex [0-9a-f]
 "while" { return T_while; }
 "with" { return T_with; }
 
-{LL}({LL}|{Ll}|{D}|_)* {return T_constructorid; }
+{LL}({LL}|{Ll}|{D}|_)* {return T_Id; }
 {Ll}({LL}|{Ll}|{D}|_)* {return T_id; }
 {D}+\.{D}+((e|E)(\-|\+)?{D}+)? { return T_real; }
 {D}+ { return T_integer; }
-\'([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})\' {return T_characters; }
+\'([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})\' {return T_character; }
 \"([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})+\" { return T_string; }
 
 "->"|"+."|"-."|"*."|"/."|"**"|"&&"|"||"|"<>"|"<="|">="|"=="|"!="|":=" {return yytext[0]+yytext[1]; }
