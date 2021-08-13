@@ -79,12 +79,12 @@ extern int yydebug;
     T_unit = 289,
     T_while = 290,
     T_with = 291,
-    T_Id = 292,
-    T_id = 293,
-    T_integer = 294,
-    T_real = 295,
-    T_character = 296,
-    T_string = 297
+    T_Id = 305,
+    T_id = 306,
+    T_integer = 307,
+    T_real = 308,
+    T_character = 309,
+    T_string = 310
   };
 #endif
 

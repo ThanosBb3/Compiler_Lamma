@@ -39,6 +39,23 @@
 %token T_while "while"
 %token T_with "with"
 
+
+%nonassoc T_let T_in 
+%left ';'
+%nonassoc T_if T_then
+%nonassoc ":="
+%left "||"
+%left "&&"
+%nonassoc '=' "<>" '<' '>' "<=" ">=" "==" "!="
+%left '+' '-' "+." "-."
+%left '*' '/' "*." "/." 
+%right "**"
+%nonassoc T_not T_delete
+%nonassoc '!'
+%nonassoc '[' ']'
+%nonassoc T_new
+
+
 %token T_Id 
 %token T_id 
 %token T_integer
@@ -46,46 +63,42 @@
 %token T_character 
 %token T_string 
 
-%left '*' '/' "*." "/." "mod" '+' '-' "+." "-." '=' "<>" '>' '<' "<=" ">=" "==" "!=" "&&" "||" ';'
-
-%right "**" 
-
 
 %%
 
 program:
     /* nothing */
-|   letdef program 
-|   typedef program    
+|   program letdef   
+|   program typedef
 ;
 
 letdef:
-    "let" def muldef
+    "let" def muldef       
 |   "let" "rec" def muldef
 ;
 
 muldef:
     /* nothing */
-|   "and" def muldef
+|   muldef "and" def
 ;
 
 def:
-    T_id mulpar "=" expr
-|   T_id mulpar ":" type "=" expr
+    T_id mulpar '=' expr
+|   T_id mulpar ':' type '=' expr
 |   "mutable" T_id
-|   "mutable" T_id ":" type
-|   "mutable" T_id "[" expr mulexpr "]"
-|   "mutable" T_id "[" expr mulexpr "]" ":" type
+|   "mutable" T_id ':' type
+|   "mutable" T_id '[' expr mulexpr ']'
+|   "mutable" T_id '[' expr mulexpr ']' ':' type
 ;
 
 mulpar:
     /* nothing */
-|   par mulpar
+|   mulpar par
 ;
 
 mulexpr:
     /* nothing */
-|   "," expr mulexpr
+|   mulexpr ',' expr
 ;
 
 typedef:
@@ -94,16 +107,16 @@ typedef:
 
 multdef:
     /* nothing */
-|   "and" tdef multdef
+|   multdef "and" tdef
 ;
 
 tdef:
-    T_id "=" constr mulconstr
+    T_id '=' constr mulconstr
 ;
 
 mulconstr:
     /* nothing */
-|   "|" constr mulconstr
+|   mulconstr '|' constr
 ;
 
 constr:
@@ -113,12 +126,12 @@ constr:
 
 multype:
     /* nothing */
-|   type multype
+|   multype type
 ;
 
 par:
     T_id
-|   "(" T_id ":" type ")"
+|   '(' T_id ':' type ')'
 ;
 
 type:
@@ -127,17 +140,17 @@ type:
 |   "char"
 |   "bool"
 |   "float"
-|   "(" type ")"
+|   '(' type ')'
 |   type "->" type
 |   type "ref"
 |   "array" "of" type
-|   "array" "[" "*" muldim "]" "of" type
+|   "array" '[' '*' muldim ']' "of" type
 |   T_id
 ;
 
 muldim:
     /* nothing */
-|   "," "*" muldim
+|   muldim ',' '*'
 ;
 
 expr:
@@ -147,13 +160,13 @@ expr:
 |   T_string
 |   "true"
 |   "false"
-|   "(" ")"
-|   "(" expr ")"
+|   '(' ')'
+|   '(' expr ')'
 |   unop expr
 |   expr binop expr
 |   T_id mulexpr2
 |   T_Id mulexpr2
-|   T_id "[" expr mulexpr "]"
+|   T_id '[' expr mulexpr ']'
 |   "dim" T_id
 |   "dim" T_integer T_id
 |   "new" type
@@ -163,19 +176,19 @@ expr:
 |   "if" expr "then" expr
 |   "if" expr "then" expr "else" expr
 |   "while" expr "do" expr "done"
-|   "for" T_id "=" expr "to" expr "do" expr "done"
-|   "for" T_id "=" expr "downto" expr "do" expr "done"
+|   "for" T_id '=' expr "to" expr "do" expr "done"
+|   "for" T_id '=' expr "downto" expr "do" expr "done"
 |   "match" expr "with" clause mulclause "end"
 ;
 
 mulexpr2:
     /* nothing */
-|   expr mulexpr2
+|   mulexpr2 expr
 ;
 
 mulclause:
     /* nothing */
-|   "|" clause mulclause
+|   mulclause '|' clause
 ;
 
 unop:
@@ -227,13 +240,13 @@ pattern:
 |   "true"
 |   "false"
 |   T_id
-|   "(" pattern ")"
+|   '(' pattern ')'
 |   T_Id mulpat
 ;
 
 mulpat:
     /* nothing */
-|   pattern mulpat
+|   mulpat pattern
 ;
 
 

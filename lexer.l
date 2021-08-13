@@ -79,7 +79,8 @@ hex [0-9a-f]
 <COMMENTS>[^(*\n]+ { /* nothing */ }
 <COMMENTS><<EOF>> { fprintf(stderr, "Error: EOF before comment-closing"); exit(1); }
 
-. { yyerror("illegal character"); }
+. { fprintf(stderr, "illegal character '%c' (ASCII: '%d') at line '%d'\n", yytext[0], yytext[0], lines); exit(1); }
+
 
 %%
 

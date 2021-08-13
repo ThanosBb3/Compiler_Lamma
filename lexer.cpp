@@ -1126,11 +1126,11 @@ case YY_STATE_EOF(COMMENTS):
 case 54:
 YY_RULE_SETUP
 #line 82 "lexer.l"
-{ yyerror("illegal character"); }
+{ fprintf(stderr, "illegal character '%c' (ASCII: '%d') at line '%d'\n", yytext[0], yytext[0], lines); exit(1); }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 84 "lexer.l"
+#line 85 "lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
 #line 1137 "lexer.cpp"
@@ -2138,7 +2138,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 84 "lexer.l"
+#line 85 "lexer.l"
 
 
 /*int main() {
