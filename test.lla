@@ -1,4 +1,19 @@
-let rec bar main gop = (89 <> 23)
+let c c (foo : array of (unit)) main (e : bool) : array of int -> unit = (a[false,"Route66"] && (dim d))
+and f : (int) = match not () with
+  ((3.14)) -> dim 1 e
+| false -> dim 1 e
+| '7' -> dim bar
+end
+
+and foo main = (if () then false else 6 / (for e = true to "foo" do '\'' done))
+and c f f = B (if 42.0 then dim 1 c)
+
+let g (d : array [*,*] of array [*,*] of array of array [*] of char ref) a e = for main = false to 3.14 do begin false end done
+and bar = let bar foo e (bar : bool) = true
+and main (a : array of float) bar g (bar : float) : char = false in (dim 1 e)
+
+
+
 
 
 

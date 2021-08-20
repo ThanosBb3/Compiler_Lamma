@@ -56,6 +56,21 @@ hex [0-9a-f]
 "while" { return T_while; }
 "with" { return T_with; }
 
+"->" { return T_arrow; }
+"+." { return T_fplus; }
+"-." { return T_fminus; }
+"*." { return T_fmul; }
+"/." { return T_fdiv; }
+"&&" { return T_land; }
+"**" { return T_power; }
+"||" { return T_lor; }
+"<>" { return T_diff; }
+"<=" { return T_leq; }
+">=" { return T_geq; }
+"==" { return T_eq; }
+"!=" { return T_neq; }
+":=" { return T_def; }
+
 {LL}({LL}|{Ll}|{D}|_)* {return T_Id; }
 {Ll}({LL}|{Ll}|{D}|_)* {return T_id; }
 {D}+\.{D}+((e|E)(\-|\+)?{D}+)? { return T_real; }
@@ -63,7 +78,6 @@ hex [0-9a-f]
 \'([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})\' {return T_character; }
 \"([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})+\" { return T_string; }
 
-"->"|"+."|"-."|"*."|"/."|"**"|"&&"|"||"|"<>"|"<="|">="|"=="|"!="|":=" {return yytext[0]+yytext[1]; }
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:] { return yytext[0]; }
 
 {W}+ { /* nothing */ }
@@ -83,11 +97,14 @@ hex [0-9a-f]
 
 
 %%
-
-/*int main() {
+/*
+int main() {
     int token;
     do {
         token = yylex();
         printf("token=%d, lexeme=\"%s\"\n", token, yytext);
     } while (token != T_eof);
-}*/
+}
+
+"->"|"+."|"-."|"*."|"/."|"&&"|"**"|"||"|"<>"|"<="|">="|"=="|"!="|":=" {return (yytext[0]*1000)+yytext[1]; }
+*/

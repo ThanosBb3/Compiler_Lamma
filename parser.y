@@ -38,9 +38,23 @@
 %token T_unit "unit"
 %token T_while "while"
 %token T_with "with"
+%token T_arrow "->"
+%token T_fplus "+."
+%token T_fminus "-."
+%token T_fmul "*."
+%token T_fdiv "/."
+%token T_land "&&"
+%token T_power "**"
+%token T_lor "||"
+%token T_diff "<>"
+%token T_leq "<="
+%token T_geq ">="
+%token T_eq "=="
+%token T_neq "!="
+%token T_def ":="
 
 
-%nonassoc T_let T_in 
+%nonassoc T_let T_in
 %left ';'
 %nonassoc T_if T_then
 %nonassoc ":="
@@ -56,6 +70,7 @@
 %nonassoc T_new
 
 
+
 %token T_Id 
 %token T_id 
 %token T_integer
@@ -68,7 +83,7 @@
 
 program:
     /* nothing */
-|   program letdef   
+|   program letdef 
 |   program typedef
 ;
 
@@ -140,13 +155,14 @@ type:
 |   "char"
 |   "bool"
 |   "float"
+|   T_id
 |   '(' type ')'
 |   type "->" type
 |   type "ref"
 |   "array" "of" type
 |   "array" '[' '*' muldim ']' "of" type
-|   T_id
 ;
+
 
 muldim:
     /* nothing */
@@ -246,7 +262,7 @@ pattern:
 
 mulpat:
     /* nothing */
-|   mulpat pattern
+|   pattern mulpat
 ;
 
 

@@ -79,12 +79,26 @@ extern int yydebug;
     T_unit = 289,
     T_while = 290,
     T_with = 291,
-    T_Id = 305,
-    T_id = 306,
-    T_integer = 307,
-    T_real = 308,
-    T_character = 309,
-    T_string = 310
+    T_arrow = 292,
+    T_fplus = 293,
+    T_fminus = 294,
+    T_fmul = 295,
+    T_fdiv = 296,
+    T_land = 297,
+    T_power = 298,
+    T_lor = 299,
+    T_diff = 300,
+    T_leq = 301,
+    T_geq = 302,
+    T_eq = 303,
+    T_neq = 304,
+    T_def = 305,
+    T_Id = 306,
+    T_id = 307,
+    T_integer = 308,
+    T_real = 309,
+    T_character = 310,
+    T_string = 311
   };
 #endif
 

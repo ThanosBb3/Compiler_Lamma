@@ -8,9 +8,10 @@ State 134 conflicts: 22 shift/reduce
 State 135 conflicts: 2 shift/reduce
 State 138 conflicts: 2 shift/reduce
 State 144 conflicts: 2 shift/reduce
+State 151 conflicts: 12 shift/reduce
 State 173 conflicts: 12 shift/reduce
-State 184 conflicts: 22 shift/reduce
-State 195 conflicts: 2 shift/reduce
+State 185 conflicts: 22 shift/reduce
+State 196 conflicts: 2 shift/reduce
 
 
 Grammar
@@ -64,12 +65,12 @@ Grammar
    32     | "char"
    33     | "bool"
    34     | "float"
-   35     | '(' type ')'
-   36     | type "->" type
-   37     | type "ref"
-   38     | "array" "of" type
-   39     | "array" '[' '*' muldim ']' "of" type
-   40     | T_id
+   35     | T_id
+   36     | '(' type ')'
+   37     | type "->" type
+   38     | type "ref"
+   39     | "array" "of" type
+   40     | "array" '[' '*' muldim ']' "of" type
 
    41 muldim: %empty
    42       | muldim ',' '*'
@@ -152,16 +153,16 @@ Grammar
   112        | T_Id mulpat
 
   113 mulpat: %empty
-  114       | mulpat pattern
+  114       | pattern mulpat
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 '!' (33) 76
-'(' (40) 29 35 49 50 111
-')' (41) 29 35 49 50 111
-'*' (42) 39 42 80
+'(' (40) 29 36 49 50 111
+')' (41) 29 36 49 50 111
+'*' (42) 40 42 80
 '+' (43) 72 78 102
 ',' (44) 17 42
 '-' (45) 73 79 103
@@ -171,12 +172,12 @@ $end (0) 0
 '<' (60) 90
 '=' (61) 8 9 21 65 66 88
 '>' (62) 91
-'[' (91) 12 13 39 55
-']' (93) 12 13 39 55
+'[' (91) 12 13 40 55
+']' (93) 12 13 40 55
 '|' (124) 23 71
 error (256)
 "and" (258) 7 20
-"array" (259) 38 39
+"array" (259) 39 40
 "begin" (260) 61
 "bool" (261) 33
 "char" (262) 32
@@ -199,9 +200,9 @@ error (256)
 "mutable" (279) 10 11 12 13
 "new" (280) 58
 "not" (281) 77
-"of" (282) 25 38 39
+"of" (282) 25 39 40
 "rec" (283) 5
-"ref" (284) 37
+"ref" (284) 38
 "then" (285) 62 63
 "to" (286) 65
 "true" (287) 47 108
@@ -209,26 +210,26 @@ error (256)
 "unit" (289) 30
 "while" (290) 64
 "with" (291) 67
-":=" (292) 99
-"||" (293) 97
-"&&" (294) 96
-"<>" (295) 89
-"<=" (296) 92
-">=" (297) 93
-"==" (298) 94
-"!=" (299) 95
-"+." (300) 74 82 105
-"-." (301) 75 83 106
-"*." (302) 84
-"/." (303) 85
-"**" (304) 87
-T_Id (305) 24 25 54 112
-T_id (306) 8 9 10 11 12 13 21 28 29 40 53 55 56 57 65 66 110
-T_integer (307) 43 57 101 102 103
-T_real (308) 44 104 105 106
-T_character (309) 45 107
-T_string (310) 46
-"->" (311) 36 100
+"->" (292) 37 100
+"+." (293) 74 82 105
+"-." (294) 75 83 106
+"*." (295) 84
+"/." (296) 85
+"&&" (297) 96
+"**" (298) 87
+"||" (299) 97
+"<>" (300) 89
+"<=" (301) 92
+">=" (302) 93
+"==" (303) 94
+"!=" (304) 95
+":=" (305) 99
+T_Id (306) 24 25 54 112
+T_id (307) 8 9 10 11 12 13 21 28 29 35 53 55 56 57 65 66 110
+T_integer (308) 43 57 101 102 103
+T_real (309) 44 104 105 106
+T_character (310) 45 107
+T_string (311) 46
 
 
 Nonterminals, with rules where they appear
@@ -263,9 +264,9 @@ par (86)
     on left: 28 29, on right: 15
 type (87)
     on left: 30 31 32 33 34 35 36 37 38 39 40, on right: 9 11 13 25
-    27 29 35 36 37 38 39 58
+    27 29 36 37 38 39 40 58
 muldim (88)
-    on left: 41 42, on right: 39 42
+    on left: 41 42, on right: 40 42
 expr (89)
     on left: 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60
     61 62 63 64 65 66 67, on right: 8 9 12 13 17 50 51 52 55 59 60
@@ -490,10 +491,10 @@ State 19
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -550,10 +551,10 @@ State 22
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -659,10 +660,10 @@ State 31
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -693,10 +694,10 @@ State 32
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -752,10 +753,10 @@ State 36
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -786,10 +787,10 @@ State 37
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -850,10 +851,10 @@ State 41
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -870,30 +871,30 @@ State 41
 
 State 42
 
-   72 unop: '+' .
-
-    $default  reduce using rule 72 (unop)
-
-
-State 43
-
-   73 unop: '-' .
-
-    $default  reduce using rule 73 (unop)
-
-
-State 44
-
    74 unop: "+." .
 
     $default  reduce using rule 74 (unop)
 
 
-State 45
+State 43
 
    75 unop: "-." .
 
     $default  reduce using rule 75 (unop)
+
+
+State 44
+
+   72 unop: '+' .
+
+    $default  reduce using rule 72 (unop)
+
+
+State 45
+
+   73 unop: '-' .
+
+    $default  reduce using rule 73 (unop)
 
 
 State 46
@@ -969,10 +970,10 @@ State 53
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1002,27 +1003,27 @@ State 55
    52 expr: expr . binop expr
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     $default  reduce using rule 16 (mulexpr)
 
@@ -1046,10 +1047,10 @@ State 56
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1066,8 +1067,8 @@ State 56
 
 State 57
 
-   38 type: "array" . "of" type
-   39     | "array" . '[' '*' muldim ']' "of" type
+   39 type: "array" . "of" type
+   40     | "array" . '[' '*' muldim ']' "of" type
 
     "of"  shift, and go to state 113
     '['   shift, and go to state 114
@@ -1110,14 +1111,14 @@ State 62
 
 State 63
 
-   40 type: T_id .
+   35 type: T_id .
 
-    $default  reduce using rule 40 (type)
+    $default  reduce using rule 35 (type)
 
 
 State 64
 
-   35 type: '(' . type ')'
+   36 type: '(' . type ')'
 
     "array"  shift, and go to state 57
     "bool"   shift, and go to state 58
@@ -1134,8 +1135,8 @@ State 64
 State 65
 
    11 def: "mutable" T_id ':' type .
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
@@ -1149,27 +1150,27 @@ State 66
    52 expr: expr . binop expr
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     $default  reduce using rule 8 (def)
 
@@ -1179,12 +1180,12 @@ State 66
 State 67
 
     9 def: T_id mulpar ':' type . '=' expr
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
-    '='    shift, and go to state 118
     "->"   shift, and go to state 117
+    '='    shift, and go to state 118
 
 
 State 68
@@ -1241,27 +1242,27 @@ State 73
 
     "end"  shift, and go to state 122
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     binop  go to state 111
 
@@ -1309,27 +1310,27 @@ State 78
 
     "mod"   shift, and go to state 88
     "then"  shift, and go to state 125
-    ';'     shift, and go to state 89
-    ":="    shift, and go to state 90
-    "||"    shift, and go to state 91
-    "&&"    shift, and go to state 92
-    '='     shift, and go to state 93
-    "<>"    shift, and go to state 94
-    '<'     shift, and go to state 95
-    '>'     shift, and go to state 96
+    "+."    shift, and go to state 89
+    "-."    shift, and go to state 90
+    "*."    shift, and go to state 91
+    "/."    shift, and go to state 92
+    "&&"    shift, and go to state 93
+    "**"    shift, and go to state 94
+    "||"    shift, and go to state 95
+    "<>"    shift, and go to state 96
     "<="    shift, and go to state 97
     ">="    shift, and go to state 98
     "=="    shift, and go to state 99
     "!="    shift, and go to state 100
-    '+'     shift, and go to state 101
-    '-'     shift, and go to state 102
-    "+."    shift, and go to state 103
-    "-."    shift, and go to state 104
-    '*'     shift, and go to state 105
-    '/'     shift, and go to state 106
-    "*."    shift, and go to state 107
-    "/."    shift, and go to state 108
-    "**"    shift, and go to state 109
+    ":="    shift, and go to state 101
+    ';'     shift, and go to state 102
+    '='     shift, and go to state 103
+    '<'     shift, and go to state 104
+    '>'     shift, and go to state 105
+    '+'     shift, and go to state 106
+    '-'     shift, and go to state 107
+    '*'     shift, and go to state 108
+    '/'     shift, and go to state 109
 
     binop  go to state 111
 
@@ -1341,35 +1342,35 @@ State 79
 
     "mod"   shift, and go to state 88
     "with"  shift, and go to state 126
-    ';'     shift, and go to state 89
-    ":="    shift, and go to state 90
-    "||"    shift, and go to state 91
-    "&&"    shift, and go to state 92
-    '='     shift, and go to state 93
-    "<>"    shift, and go to state 94
-    '<'     shift, and go to state 95
-    '>'     shift, and go to state 96
+    "+."    shift, and go to state 89
+    "-."    shift, and go to state 90
+    "*."    shift, and go to state 91
+    "/."    shift, and go to state 92
+    "&&"    shift, and go to state 93
+    "**"    shift, and go to state 94
+    "||"    shift, and go to state 95
+    "<>"    shift, and go to state 96
     "<="    shift, and go to state 97
     ">="    shift, and go to state 98
     "=="    shift, and go to state 99
     "!="    shift, and go to state 100
-    '+'     shift, and go to state 101
-    '-'     shift, and go to state 102
-    "+."    shift, and go to state 103
-    "-."    shift, and go to state 104
-    '*'     shift, and go to state 105
-    '/'     shift, and go to state 106
-    "*."    shift, and go to state 107
-    "/."    shift, and go to state 108
-    "**"    shift, and go to state 109
+    ":="    shift, and go to state 101
+    ';'     shift, and go to state 102
+    '='     shift, and go to state 103
+    '<'     shift, and go to state 104
+    '>'     shift, and go to state 105
+    '+'     shift, and go to state 106
+    '-'     shift, and go to state 107
+    '*'     shift, and go to state 108
+    '/'     shift, and go to state 109
 
     binop  go to state 111
 
 
 State 80
 
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
    58 expr: "new" type .
 
     "ref"  shift, and go to state 116
@@ -1385,27 +1386,27 @@ State 81
 
     "do"   shift, and go to state 127
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     binop  go to state 111
 
@@ -1427,10 +1428,10 @@ State 82
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1452,10 +1453,10 @@ State 82
     "not"        [reduce using rule 54 (expr)]
     "true"       [reduce using rule 54 (expr)]
     "while"      [reduce using rule 54 (expr)]
-    '+'          [reduce using rule 54 (expr)]
-    '-'          [reduce using rule 54 (expr)]
     "+."         [reduce using rule 54 (expr)]
     "-."         [reduce using rule 54 (expr)]
+    '+'          [reduce using rule 54 (expr)]
+    '-'          [reduce using rule 54 (expr)]
     '!'          [reduce using rule 54 (expr)]
     T_Id         [reduce using rule 54 (expr)]
     T_id         [reduce using rule 54 (expr)]
@@ -1487,10 +1488,10 @@ State 83
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1522,10 +1523,10 @@ State 84
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1547,10 +1548,10 @@ State 84
     "not"        [reduce using rule 53 (expr)]
     "true"       [reduce using rule 53 (expr)]
     "while"      [reduce using rule 53 (expr)]
-    '+'          [reduce using rule 53 (expr)]
-    '-'          [reduce using rule 53 (expr)]
     "+."         [reduce using rule 53 (expr)]
     "-."         [reduce using rule 53 (expr)]
+    '+'          [reduce using rule 53 (expr)]
+    '-'          [reduce using rule 53 (expr)]
     '!'          [reduce using rule 53 (expr)]
     T_Id         [reduce using rule 53 (expr)]
     T_id         [reduce using rule 53 (expr)]
@@ -1579,27 +1580,27 @@ State 86
    52     | expr . binop expr
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
     ')'    shift, and go to state 130
 
     binop  go to state 111
@@ -1621,10 +1622,10 @@ State 87
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1648,58 +1649,58 @@ State 88
 
 State 89
 
-   98 binop: ';' .
+   82 binop: "+." .
 
-    $default  reduce using rule 98 (binop)
+    $default  reduce using rule 82 (binop)
 
 
 State 90
 
-   99 binop: ":=" .
+   83 binop: "-." .
 
-    $default  reduce using rule 99 (binop)
+    $default  reduce using rule 83 (binop)
 
 
 State 91
 
-   97 binop: "||" .
+   84 binop: "*." .
 
-    $default  reduce using rule 97 (binop)
+    $default  reduce using rule 84 (binop)
 
 
 State 92
+
+   85 binop: "/." .
+
+    $default  reduce using rule 85 (binop)
+
+
+State 93
 
    96 binop: "&&" .
 
     $default  reduce using rule 96 (binop)
 
 
-State 93
-
-   88 binop: '=' .
-
-    $default  reduce using rule 88 (binop)
-
-
 State 94
 
-   89 binop: "<>" .
+   87 binop: "**" .
 
-    $default  reduce using rule 89 (binop)
+    $default  reduce using rule 87 (binop)
 
 
 State 95
 
-   90 binop: '<' .
+   97 binop: "||" .
 
-    $default  reduce using rule 90 (binop)
+    $default  reduce using rule 97 (binop)
 
 
 State 96
 
-   91 binop: '>' .
+   89 binop: "<>" .
 
-    $default  reduce using rule 91 (binop)
+    $default  reduce using rule 89 (binop)
 
 
 State 97
@@ -1732,65 +1733,65 @@ State 100
 
 State 101
 
+   99 binop: ":=" .
+
+    $default  reduce using rule 99 (binop)
+
+
+State 102
+
+   98 binop: ';' .
+
+    $default  reduce using rule 98 (binop)
+
+
+State 103
+
+   88 binop: '=' .
+
+    $default  reduce using rule 88 (binop)
+
+
+State 104
+
+   90 binop: '<' .
+
+    $default  reduce using rule 90 (binop)
+
+
+State 105
+
+   91 binop: '>' .
+
+    $default  reduce using rule 91 (binop)
+
+
+State 106
+
    78 binop: '+' .
 
     $default  reduce using rule 78 (binop)
 
 
-State 102
+State 107
 
    79 binop: '-' .
 
     $default  reduce using rule 79 (binop)
 
 
-State 103
-
-   82 binop: "+." .
-
-    $default  reduce using rule 82 (binop)
-
-
-State 104
-
-   83 binop: "-." .
-
-    $default  reduce using rule 83 (binop)
-
-
-State 105
+State 108
 
    80 binop: '*' .
 
     $default  reduce using rule 80 (binop)
 
 
-State 106
+State 109
 
    81 binop: '/' .
 
     $default  reduce using rule 81 (binop)
-
-
-State 107
-
-   84 binop: "*." .
-
-    $default  reduce using rule 84 (binop)
-
-
-State 108
-
-   85 binop: "/." .
-
-    $default  reduce using rule 85 (binop)
-
-
-State 109
-
-   87 binop: "**" .
-
-    $default  reduce using rule 87 (binop)
 
 
 State 110
@@ -1819,10 +1820,10 @@ State 111
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -1843,50 +1844,50 @@ State 112
    52     | expr . binop expr
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     "mod"     [reduce using rule 51 (expr)]
-    ';'       [reduce using rule 51 (expr)]
-    ":="      [reduce using rule 51 (expr)]
-    "||"      [reduce using rule 51 (expr)]
+    "+."      [reduce using rule 51 (expr)]
+    "-."      [reduce using rule 51 (expr)]
+    "*."      [reduce using rule 51 (expr)]
+    "/."      [reduce using rule 51 (expr)]
     "&&"      [reduce using rule 51 (expr)]
-    '='       [reduce using rule 51 (expr)]
+    "**"      [reduce using rule 51 (expr)]
+    "||"      [reduce using rule 51 (expr)]
     "<>"      [reduce using rule 51 (expr)]
-    '<'       [reduce using rule 51 (expr)]
-    '>'       [reduce using rule 51 (expr)]
     "<="      [reduce using rule 51 (expr)]
     ">="      [reduce using rule 51 (expr)]
     "=="      [reduce using rule 51 (expr)]
     "!="      [reduce using rule 51 (expr)]
+    ":="      [reduce using rule 51 (expr)]
+    ';'       [reduce using rule 51 (expr)]
+    '='       [reduce using rule 51 (expr)]
+    '<'       [reduce using rule 51 (expr)]
+    '>'       [reduce using rule 51 (expr)]
     '+'       [reduce using rule 51 (expr)]
     '-'       [reduce using rule 51 (expr)]
-    "+."      [reduce using rule 51 (expr)]
-    "-."      [reduce using rule 51 (expr)]
     '*'       [reduce using rule 51 (expr)]
     '/'       [reduce using rule 51 (expr)]
-    "*."      [reduce using rule 51 (expr)]
-    "/."      [reduce using rule 51 (expr)]
-    "**"      [reduce using rule 51 (expr)]
     $default  reduce using rule 51 (expr)
 
     binop  go to state 111
@@ -1894,7 +1895,7 @@ State 112
 
 State 113
 
-   38 type: "array" "of" . type
+   39 type: "array" "of" . type
 
     "array"  shift, and go to state 57
     "bool"   shift, and go to state 58
@@ -1910,32 +1911,32 @@ State 113
 
 State 114
 
-   39 type: "array" '[' . '*' muldim ']' "of" type
+   40 type: "array" '[' . '*' muldim ']' "of" type
 
     '*'  shift, and go to state 136
 
 
 State 115
 
-   35 type: '(' type . ')'
-   36     | type . "->" type
-   37     | type . "ref"
+   36 type: '(' type . ')'
+   37     | type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
-    ')'    shift, and go to state 137
     "->"   shift, and go to state 117
+    ')'    shift, and go to state 137
 
 
 State 116
 
-   37 type: type "ref" .
+   38 type: type "ref" .
 
-    $default  reduce using rule 37 (type)
+    $default  reduce using rule 38 (type)
 
 
 State 117
 
-   36 type: type "->" . type
+   37 type: type "->" . type
 
     "array"  shift, and go to state 57
     "bool"   shift, and go to state 58
@@ -1965,10 +1966,10 @@ State 118
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2002,8 +2003,8 @@ State 119
 State 120
 
    25 constr: T_Id "of" type . multype
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
@@ -2053,10 +2054,10 @@ State 124
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2088,10 +2089,10 @@ State 125
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2112,10 +2113,10 @@ State 126
 
     "false"      shift, and go to state 145
     "true"       shift, and go to state 146
-    '+'          shift, and go to state 147
-    '-'          shift, and go to state 148
-    "+."         shift, and go to state 149
-    "-."         shift, and go to state 150
+    "+."         shift, and go to state 147
+    "-."         shift, and go to state 148
+    '+'          shift, and go to state 149
+    '-'          shift, and go to state 150
     T_Id         shift, and go to state 151
     T_id         shift, and go to state 152
     T_integer    shift, and go to state 153
@@ -2143,10 +2144,10 @@ State 127
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2167,50 +2168,50 @@ State 128
    69 mulexpr2: mulexpr2 expr .
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     "mod"     [reduce using rule 69 (mulexpr2)]
-    ';'       [reduce using rule 69 (mulexpr2)]
-    ":="      [reduce using rule 69 (mulexpr2)]
-    "||"      [reduce using rule 69 (mulexpr2)]
+    "+."      [reduce using rule 69 (mulexpr2)]
+    "-."      [reduce using rule 69 (mulexpr2)]
+    "*."      [reduce using rule 69 (mulexpr2)]
+    "/."      [reduce using rule 69 (mulexpr2)]
     "&&"      [reduce using rule 69 (mulexpr2)]
-    '='       [reduce using rule 69 (mulexpr2)]
+    "**"      [reduce using rule 69 (mulexpr2)]
+    "||"      [reduce using rule 69 (mulexpr2)]
     "<>"      [reduce using rule 69 (mulexpr2)]
-    '<'       [reduce using rule 69 (mulexpr2)]
-    '>'       [reduce using rule 69 (mulexpr2)]
     "<="      [reduce using rule 69 (mulexpr2)]
     ">="      [reduce using rule 69 (mulexpr2)]
     "=="      [reduce using rule 69 (mulexpr2)]
     "!="      [reduce using rule 69 (mulexpr2)]
+    ":="      [reduce using rule 69 (mulexpr2)]
+    ';'       [reduce using rule 69 (mulexpr2)]
+    '='       [reduce using rule 69 (mulexpr2)]
+    '<'       [reduce using rule 69 (mulexpr2)]
+    '>'       [reduce using rule 69 (mulexpr2)]
     '+'       [reduce using rule 69 (mulexpr2)]
     '-'       [reduce using rule 69 (mulexpr2)]
-    "+."      [reduce using rule 69 (mulexpr2)]
-    "-."      [reduce using rule 69 (mulexpr2)]
     '*'       [reduce using rule 69 (mulexpr2)]
     '/'       [reduce using rule 69 (mulexpr2)]
-    "*."      [reduce using rule 69 (mulexpr2)]
-    "/."      [reduce using rule 69 (mulexpr2)]
-    "**"      [reduce using rule 69 (mulexpr2)]
     $default  reduce using rule 69 (mulexpr2)
 
     binop  go to state 111
@@ -2222,27 +2223,27 @@ State 129
    55     | T_id '[' expr . mulexpr ']'
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     $default  reduce using rule 16 (mulexpr)
 
@@ -2263,27 +2264,27 @@ State 131
    60     | letdef "in" expr .
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     "mod"     [reduce using rule 60 (expr)]
     $default  reduce using rule 60 (expr)
@@ -2317,10 +2318,10 @@ State 133
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2341,50 +2342,50 @@ State 134
    52     | expr binop expr .
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     "mod"     [reduce using rule 52 (expr)]
-    ';'       [reduce using rule 52 (expr)]
-    ":="      [reduce using rule 52 (expr)]
-    "||"      [reduce using rule 52 (expr)]
+    "+."      [reduce using rule 52 (expr)]
+    "-."      [reduce using rule 52 (expr)]
+    "*."      [reduce using rule 52 (expr)]
+    "/."      [reduce using rule 52 (expr)]
     "&&"      [reduce using rule 52 (expr)]
-    '='       [reduce using rule 52 (expr)]
+    "**"      [reduce using rule 52 (expr)]
+    "||"      [reduce using rule 52 (expr)]
     "<>"      [reduce using rule 52 (expr)]
-    '<'       [reduce using rule 52 (expr)]
-    '>'       [reduce using rule 52 (expr)]
     "<="      [reduce using rule 52 (expr)]
     ">="      [reduce using rule 52 (expr)]
     "=="      [reduce using rule 52 (expr)]
     "!="      [reduce using rule 52 (expr)]
+    ":="      [reduce using rule 52 (expr)]
+    ';'       [reduce using rule 52 (expr)]
+    '='       [reduce using rule 52 (expr)]
+    '<'       [reduce using rule 52 (expr)]
+    '>'       [reduce using rule 52 (expr)]
     '+'       [reduce using rule 52 (expr)]
     '-'       [reduce using rule 52 (expr)]
-    "+."      [reduce using rule 52 (expr)]
-    "-."      [reduce using rule 52 (expr)]
     '*'       [reduce using rule 52 (expr)]
     '/'       [reduce using rule 52 (expr)]
-    "*."      [reduce using rule 52 (expr)]
-    "/."      [reduce using rule 52 (expr)]
-    "**"      [reduce using rule 52 (expr)]
     $default  reduce using rule 52 (expr)
 
     binop  go to state 111
@@ -2392,21 +2393,21 @@ State 134
 
 State 135
 
-   36 type: type . "->" type
-   37     | type . "ref"
-   38     | "array" "of" type .
+   37 type: type . "->" type
+   38     | type . "ref"
+   39     | "array" "of" type .
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
 
-    "ref"     [reduce using rule 38 (type)]
-    "->"      [reduce using rule 38 (type)]
-    $default  reduce using rule 38 (type)
+    "ref"     [reduce using rule 39 (type)]
+    "->"      [reduce using rule 39 (type)]
+    $default  reduce using rule 39 (type)
 
 
 State 136
 
-   39 type: "array" '[' '*' . muldim ']' "of" type
+   40 type: "array" '[' '*' . muldim ']' "of" type
 
     $default  reduce using rule 41 (muldim)
 
@@ -2415,23 +2416,23 @@ State 136
 
 State 137
 
-   35 type: '(' type ')' .
+   36 type: '(' type ')' .
 
-    $default  reduce using rule 35 (type)
+    $default  reduce using rule 36 (type)
 
 
 State 138
 
-   36 type: type . "->" type
-   36     | type "->" type .
-   37     | type . "ref"
+   37 type: type . "->" type
+   37     | type "->" type .
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
 
-    "ref"     [reduce using rule 36 (type)]
-    "->"      [reduce using rule 36 (type)]
-    $default  reduce using rule 36 (type)
+    "ref"     [reduce using rule 37 (type)]
+    "->"      [reduce using rule 37 (type)]
+    $default  reduce using rule 37 (type)
 
 
 State 139
@@ -2440,27 +2441,27 @@ State 139
    52 expr: expr . binop expr
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     $default  reduce using rule 9 (def)
 
@@ -2470,12 +2471,12 @@ State 139
 State 140
 
    29 par: '(' T_id ':' type . ')'
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
-    ')'    shift, and go to state 164
     "->"   shift, and go to state 117
+    ')'    shift, and go to state 164
 
 
 State 141
@@ -2513,27 +2514,27 @@ State 143
     "downto"  shift, and go to state 166
     "mod"     shift, and go to state 88
     "to"      shift, and go to state 167
-    ';'       shift, and go to state 89
-    ":="      shift, and go to state 90
-    "||"      shift, and go to state 91
-    "&&"      shift, and go to state 92
-    '='       shift, and go to state 93
-    "<>"      shift, and go to state 94
-    '<'       shift, and go to state 95
-    '>'       shift, and go to state 96
+    "+."      shift, and go to state 89
+    "-."      shift, and go to state 90
+    "*."      shift, and go to state 91
+    "/."      shift, and go to state 92
+    "&&"      shift, and go to state 93
+    "**"      shift, and go to state 94
+    "||"      shift, and go to state 95
+    "<>"      shift, and go to state 96
     "<="      shift, and go to state 97
     ">="      shift, and go to state 98
     "=="      shift, and go to state 99
     "!="      shift, and go to state 100
-    '+'       shift, and go to state 101
-    '-'       shift, and go to state 102
-    "+."      shift, and go to state 103
-    "-."      shift, and go to state 104
-    '*'       shift, and go to state 105
-    '/'       shift, and go to state 106
-    "*."      shift, and go to state 107
-    "/."      shift, and go to state 108
-    "**"      shift, and go to state 109
+    ":="      shift, and go to state 101
+    ';'       shift, and go to state 102
+    '='       shift, and go to state 103
+    '<'       shift, and go to state 104
+    '>'       shift, and go to state 105
+    '+'       shift, and go to state 106
+    '-'       shift, and go to state 107
+    '*'       shift, and go to state 108
+    '/'       shift, and go to state 109
 
     binop  go to state 111
 
@@ -2546,26 +2547,26 @@ State 144
 
     "else"  shift, and go to state 168
     "mod"   shift, and go to state 88
-    ":="    shift, and go to state 90
-    "||"    shift, and go to state 91
-    "&&"    shift, and go to state 92
-    '='     shift, and go to state 93
-    "<>"    shift, and go to state 94
-    '<'     shift, and go to state 95
-    '>'     shift, and go to state 96
+    "+."    shift, and go to state 89
+    "-."    shift, and go to state 90
+    "*."    shift, and go to state 91
+    "/."    shift, and go to state 92
+    "&&"    shift, and go to state 93
+    "**"    shift, and go to state 94
+    "||"    shift, and go to state 95
+    "<>"    shift, and go to state 96
     "<="    shift, and go to state 97
     ">="    shift, and go to state 98
     "=="    shift, and go to state 99
     "!="    shift, and go to state 100
-    '+'     shift, and go to state 101
-    '-'     shift, and go to state 102
-    "+."    shift, and go to state 103
-    "-."    shift, and go to state 104
-    '*'     shift, and go to state 105
-    '/'     shift, and go to state 106
-    "*."    shift, and go to state 107
-    "/."    shift, and go to state 108
-    "**"    shift, and go to state 109
+    ":="    shift, and go to state 101
+    '='     shift, and go to state 103
+    '<'     shift, and go to state 104
+    '>'     shift, and go to state 105
+    '+'     shift, and go to state 106
+    '-'     shift, and go to state 107
+    '*'     shift, and go to state 108
+    '/'     shift, and go to state 109
 
     "else"    [reduce using rule 62 (expr)]
     "mod"     [reduce using rule 62 (expr)]
@@ -2590,39 +2591,65 @@ State 146
 
 State 147
 
-  102 pattern: '+' . T_integer
+  105 pattern: "+." . T_real
 
-    T_integer  shift, and go to state 169
+    T_real  shift, and go to state 169
 
 
 State 148
 
-  103 pattern: '-' . T_integer
+  106 pattern: "-." . T_real
 
-    T_integer  shift, and go to state 170
+    T_real  shift, and go to state 170
 
 
 State 149
 
-  105 pattern: "+." . T_real
+  102 pattern: '+' . T_integer
 
-    T_real  shift, and go to state 171
+    T_integer  shift, and go to state 171
 
 
 State 150
 
-  106 pattern: "-." . T_real
+  103 pattern: '-' . T_integer
 
-    T_real  shift, and go to state 172
+    T_integer  shift, and go to state 172
 
 
 State 151
 
   112 pattern: T_Id . mulpat
 
-    $default  reduce using rule 113 (mulpat)
+    "false"      shift, and go to state 145
+    "true"       shift, and go to state 146
+    "+."         shift, and go to state 147
+    "-."         shift, and go to state 148
+    '+'          shift, and go to state 149
+    '-'          shift, and go to state 150
+    T_Id         shift, and go to state 151
+    T_id         shift, and go to state 152
+    T_integer    shift, and go to state 153
+    T_real       shift, and go to state 154
+    T_character  shift, and go to state 155
+    '('          shift, and go to state 156
 
-    mulpat  go to state 173
+    "false"      [reduce using rule 113 (mulpat)]
+    "true"       [reduce using rule 113 (mulpat)]
+    "+."         [reduce using rule 113 (mulpat)]
+    "-."         [reduce using rule 113 (mulpat)]
+    '+'          [reduce using rule 113 (mulpat)]
+    '-'          [reduce using rule 113 (mulpat)]
+    T_Id         [reduce using rule 113 (mulpat)]
+    T_id         [reduce using rule 113 (mulpat)]
+    T_integer    [reduce using rule 113 (mulpat)]
+    T_real       [reduce using rule 113 (mulpat)]
+    T_character  [reduce using rule 113 (mulpat)]
+    '('          [reduce using rule 113 (mulpat)]
+    $default     reduce using rule 113 (mulpat)
+
+    pattern  go to state 173
+    mulpat   go to state 174
 
 
 State 152
@@ -2659,10 +2686,10 @@ State 156
 
     "false"      shift, and go to state 145
     "true"       shift, and go to state 146
-    '+'          shift, and go to state 147
-    '-'          shift, and go to state 148
-    "+."         shift, and go to state 149
-    "-."         shift, and go to state 150
+    "+."         shift, and go to state 147
+    "-."         shift, and go to state 148
+    '+'          shift, and go to state 149
+    '-'          shift, and go to state 150
     T_Id         shift, and go to state 151
     T_id         shift, and go to state 152
     T_integer    shift, and go to state 153
@@ -2670,7 +2697,7 @@ State 156
     T_character  shift, and go to state 155
     '('          shift, and go to state 156
 
-    pattern  go to state 174
+    pattern  go to state 175
 
 
 State 157
@@ -2679,14 +2706,14 @@ State 157
 
     $default  reduce using rule 70 (mulclause)
 
-    mulclause  go to state 175
+    mulclause  go to state 176
 
 
 State 158
 
   100 clause: pattern . "->" expr
 
-    "->"  shift, and go to state 176
+    "->"  shift, and go to state 177
 
 
 State 159
@@ -2694,29 +2721,29 @@ State 159
    52 expr: expr . binop expr
    64     | "while" expr "do" expr . "done"
 
-    "done"  shift, and go to state 177
+    "done"  shift, and go to state 178
     "mod"   shift, and go to state 88
-    ';'     shift, and go to state 89
-    ":="    shift, and go to state 90
-    "||"    shift, and go to state 91
-    "&&"    shift, and go to state 92
-    '='     shift, and go to state 93
-    "<>"    shift, and go to state 94
-    '<'     shift, and go to state 95
-    '>'     shift, and go to state 96
+    "+."    shift, and go to state 89
+    "-."    shift, and go to state 90
+    "*."    shift, and go to state 91
+    "/."    shift, and go to state 92
+    "&&"    shift, and go to state 93
+    "**"    shift, and go to state 94
+    "||"    shift, and go to state 95
+    "<>"    shift, and go to state 96
     "<="    shift, and go to state 97
     ">="    shift, and go to state 98
     "=="    shift, and go to state 99
     "!="    shift, and go to state 100
-    '+'     shift, and go to state 101
-    '-'     shift, and go to state 102
-    "+."    shift, and go to state 103
-    "-."    shift, and go to state 104
-    '*'     shift, and go to state 105
-    '/'     shift, and go to state 106
-    "*."    shift, and go to state 107
-    "/."    shift, and go to state 108
-    "**"    shift, and go to state 109
+    ":="    shift, and go to state 101
+    ';'     shift, and go to state 102
+    '='     shift, and go to state 103
+    '<'     shift, and go to state 104
+    '>'     shift, and go to state 105
+    '+'     shift, and go to state 106
+    '-'     shift, and go to state 107
+    '*'     shift, and go to state 108
+    '/'     shift, and go to state 109
 
     binop  go to state 111
 
@@ -2726,7 +2753,7 @@ State 160
    17 mulexpr: mulexpr . ',' expr
    55 expr: T_id '[' expr mulexpr . ']'
 
-    ']'  shift, and go to state 178
+    ']'  shift, and go to state 179
     ','  shift, and go to state 133
 
 
@@ -2743,7 +2770,7 @@ State 161
     T_id     shift, and go to state 63
     '('      shift, and go to state 64
 
-    type  go to state 179
+    type  go to state 180
 
 
 State 162
@@ -2752,27 +2779,27 @@ State 162
    52 expr: expr . binop expr
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     $default  reduce using rule 17 (mulexpr)
 
@@ -2781,11 +2808,11 @@ State 162
 
 State 163
 
-   39 type: "array" '[' '*' muldim . ']' "of" type
+   40 type: "array" '[' '*' muldim . ']' "of" type
    42 muldim: muldim . ',' '*'
 
-    ']'  shift, and go to state 180
-    ','  shift, and go to state 181
+    ']'  shift, and go to state 181
+    ','  shift, and go to state 182
 
 
 State 164
@@ -2798,8 +2825,8 @@ State 164
 State 165
 
    27 multype: multype type .
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
@@ -2823,10 +2850,10 @@ State 166
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2837,7 +2864,7 @@ State 166
     '('          shift, and go to state 53
 
     letdef  go to state 54
-    expr    go to state 182
+    expr    go to state 183
     unop    go to state 56
 
 
@@ -2857,10 +2884,10 @@ State 167
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2871,7 +2898,7 @@ State 167
     '('          shift, and go to state 53
 
     letdef  go to state 54
-    expr    go to state 183
+    expr    go to state 184
     unop    go to state 56
 
 
@@ -2891,10 +2918,10 @@ State 168
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -2905,49 +2932,48 @@ State 168
     '('          shift, and go to state 53
 
     letdef  go to state 54
-    expr    go to state 184
+    expr    go to state 185
     unop    go to state 56
 
 
 State 169
-
-  102 pattern: '+' T_integer .
-
-    $default  reduce using rule 102 (pattern)
-
-
-State 170
-
-  103 pattern: '-' T_integer .
-
-    $default  reduce using rule 103 (pattern)
-
-
-State 171
 
   105 pattern: "+." T_real .
 
     $default  reduce using rule 105 (pattern)
 
 
-State 172
+State 170
 
   106 pattern: "-." T_real .
 
     $default  reduce using rule 106 (pattern)
 
 
+State 171
+
+  102 pattern: '+' T_integer .
+
+    $default  reduce using rule 102 (pattern)
+
+
+State 172
+
+  103 pattern: '-' T_integer .
+
+    $default  reduce using rule 103 (pattern)
+
+
 State 173
 
-  112 pattern: T_Id mulpat .
-  114 mulpat: mulpat . pattern
+  114 mulpat: pattern . mulpat
 
     "false"      shift, and go to state 145
     "true"       shift, and go to state 146
-    '+'          shift, and go to state 147
-    '-'          shift, and go to state 148
-    "+."         shift, and go to state 149
-    "-."         shift, and go to state 150
+    "+."         shift, and go to state 147
+    "-."         shift, and go to state 148
+    '+'          shift, and go to state 149
+    '-'          shift, and go to state 150
     T_Id         shift, and go to state 151
     T_id         shift, and go to state 152
     T_integer    shift, and go to state 153
@@ -2955,40 +2981,48 @@ State 173
     T_character  shift, and go to state 155
     '('          shift, and go to state 156
 
-    "false"      [reduce using rule 112 (pattern)]
-    "true"       [reduce using rule 112 (pattern)]
-    '+'          [reduce using rule 112 (pattern)]
-    '-'          [reduce using rule 112 (pattern)]
-    "+."         [reduce using rule 112 (pattern)]
-    "-."         [reduce using rule 112 (pattern)]
-    T_Id         [reduce using rule 112 (pattern)]
-    T_id         [reduce using rule 112 (pattern)]
-    T_integer    [reduce using rule 112 (pattern)]
-    T_real       [reduce using rule 112 (pattern)]
-    T_character  [reduce using rule 112 (pattern)]
-    '('          [reduce using rule 112 (pattern)]
-    $default     reduce using rule 112 (pattern)
+    "false"      [reduce using rule 113 (mulpat)]
+    "true"       [reduce using rule 113 (mulpat)]
+    "+."         [reduce using rule 113 (mulpat)]
+    "-."         [reduce using rule 113 (mulpat)]
+    '+'          [reduce using rule 113 (mulpat)]
+    '-'          [reduce using rule 113 (mulpat)]
+    T_Id         [reduce using rule 113 (mulpat)]
+    T_id         [reduce using rule 113 (mulpat)]
+    T_integer    [reduce using rule 113 (mulpat)]
+    T_real       [reduce using rule 113 (mulpat)]
+    T_character  [reduce using rule 113 (mulpat)]
+    '('          [reduce using rule 113 (mulpat)]
+    $default     reduce using rule 113 (mulpat)
 
-    pattern  go to state 185
+    pattern  go to state 173
+    mulpat   go to state 186
 
 
 State 174
 
-  111 pattern: '(' pattern . ')'
+  112 pattern: T_Id mulpat .
 
-    ')'  shift, and go to state 186
+    $default  reduce using rule 112 (pattern)
 
 
 State 175
 
-   67 expr: "match" expr "with" clause mulclause . "end"
-   71 mulclause: mulclause . '|' clause
+  111 pattern: '(' pattern . ')'
 
-    "end"  shift, and go to state 187
-    '|'    shift, and go to state 188
+    ')'  shift, and go to state 187
 
 
 State 176
+
+   67 expr: "match" expr "with" clause mulclause . "end"
+   71 mulclause: mulclause . '|' clause
+
+    "end"  shift, and go to state 188
+    '|'    shift, and go to state 189
+
+
+State 177
 
   100 clause: pattern "->" . expr
 
@@ -3004,10 +3038,10 @@ State 176
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -3018,29 +3052,29 @@ State 176
     '('          shift, and go to state 53
 
     letdef  go to state 54
-    expr    go to state 189
+    expr    go to state 190
     unop    go to state 56
 
 
-State 177
+State 178
 
    64 expr: "while" expr "do" expr "done" .
 
     $default  reduce using rule 64 (expr)
 
 
-State 178
+State 179
 
    55 expr: T_id '[' expr mulexpr ']' .
 
     $default  reduce using rule 55 (expr)
 
 
-State 179
+State 180
 
    13 def: "mutable" T_id '[' expr mulexpr ']' ':' type .
-   36 type: type . "->" type
-   37     | type . "ref"
+   37 type: type . "->" type
+   38     | type . "ref"
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
@@ -3048,80 +3082,48 @@ State 179
     $default  reduce using rule 13 (def)
 
 
-State 180
-
-   39 type: "array" '[' '*' muldim ']' . "of" type
-
-    "of"  shift, and go to state 190
-
-
 State 181
 
-   42 muldim: muldim ',' . '*'
+   40 type: "array" '[' '*' muldim ']' . "of" type
 
-    '*'  shift, and go to state 191
+    "of"  shift, and go to state 191
 
 
 State 182
 
-   52 expr: expr . binop expr
-   66     | "for" T_id '=' expr "downto" expr . "do" expr "done"
+   42 muldim: muldim ',' . '*'
 
-    "do"   shift, and go to state 192
-    "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
-    "<="   shift, and go to state 97
-    ">="   shift, and go to state 98
-    "=="   shift, and go to state 99
-    "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
-
-    binop  go to state 111
+    '*'  shift, and go to state 192
 
 
 State 183
 
    52 expr: expr . binop expr
-   65     | "for" T_id '=' expr "to" expr . "do" expr "done"
+   66     | "for" T_id '=' expr "downto" expr . "do" expr "done"
 
     "do"   shift, and go to state 193
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     binop  go to state 111
 
@@ -3129,89 +3131,121 @@ State 183
 State 184
 
    52 expr: expr . binop expr
-   63     | "if" expr "then" expr "else" expr .
+   65     | "for" T_id '=' expr "to" expr . "do" expr "done"
 
+    "do"   shift, and go to state 194
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
-
-    "mod"     [reduce using rule 63 (expr)]
-    ';'       [reduce using rule 63 (expr)]
-    ":="      [reduce using rule 63 (expr)]
-    "||"      [reduce using rule 63 (expr)]
-    "&&"      [reduce using rule 63 (expr)]
-    '='       [reduce using rule 63 (expr)]
-    "<>"      [reduce using rule 63 (expr)]
-    '<'       [reduce using rule 63 (expr)]
-    '>'       [reduce using rule 63 (expr)]
-    "<="      [reduce using rule 63 (expr)]
-    ">="      [reduce using rule 63 (expr)]
-    "=="      [reduce using rule 63 (expr)]
-    "!="      [reduce using rule 63 (expr)]
-    '+'       [reduce using rule 63 (expr)]
-    '-'       [reduce using rule 63 (expr)]
-    "+."      [reduce using rule 63 (expr)]
-    "-."      [reduce using rule 63 (expr)]
-    '*'       [reduce using rule 63 (expr)]
-    '/'       [reduce using rule 63 (expr)]
-    "*."      [reduce using rule 63 (expr)]
-    "/."      [reduce using rule 63 (expr)]
-    "**"      [reduce using rule 63 (expr)]
-    $default  reduce using rule 63 (expr)
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     binop  go to state 111
 
 
 State 185
 
-  114 mulpat: mulpat pattern .
+   52 expr: expr . binop expr
+   63     | "if" expr "then" expr "else" expr .
+
+    "mod"  shift, and go to state 88
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
+    "<="   shift, and go to state 97
+    ">="   shift, and go to state 98
+    "=="   shift, and go to state 99
+    "!="   shift, and go to state 100
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
+
+    "mod"     [reduce using rule 63 (expr)]
+    "+."      [reduce using rule 63 (expr)]
+    "-."      [reduce using rule 63 (expr)]
+    "*."      [reduce using rule 63 (expr)]
+    "/."      [reduce using rule 63 (expr)]
+    "&&"      [reduce using rule 63 (expr)]
+    "**"      [reduce using rule 63 (expr)]
+    "||"      [reduce using rule 63 (expr)]
+    "<>"      [reduce using rule 63 (expr)]
+    "<="      [reduce using rule 63 (expr)]
+    ">="      [reduce using rule 63 (expr)]
+    "=="      [reduce using rule 63 (expr)]
+    "!="      [reduce using rule 63 (expr)]
+    ":="      [reduce using rule 63 (expr)]
+    ';'       [reduce using rule 63 (expr)]
+    '='       [reduce using rule 63 (expr)]
+    '<'       [reduce using rule 63 (expr)]
+    '>'       [reduce using rule 63 (expr)]
+    '+'       [reduce using rule 63 (expr)]
+    '-'       [reduce using rule 63 (expr)]
+    '*'       [reduce using rule 63 (expr)]
+    '/'       [reduce using rule 63 (expr)]
+    $default  reduce using rule 63 (expr)
+
+    binop  go to state 111
+
+
+State 186
+
+  114 mulpat: pattern mulpat .
 
     $default  reduce using rule 114 (mulpat)
 
 
-State 186
+State 187
 
   111 pattern: '(' pattern ')' .
 
     $default  reduce using rule 111 (pattern)
 
 
-State 187
+State 188
 
    67 expr: "match" expr "with" clause mulclause "end" .
 
     $default  reduce using rule 67 (expr)
 
 
-State 188
+State 189
 
    71 mulclause: mulclause '|' . clause
 
     "false"      shift, and go to state 145
     "true"       shift, and go to state 146
-    '+'          shift, and go to state 147
-    '-'          shift, and go to state 148
-    "+."         shift, and go to state 149
-    "-."         shift, and go to state 150
+    "+."         shift, and go to state 147
+    "-."         shift, and go to state 148
+    '+'          shift, and go to state 149
+    '-'          shift, and go to state 150
     T_Id         shift, and go to state 151
     T_id         shift, and go to state 152
     T_integer    shift, and go to state 153
@@ -3219,46 +3253,46 @@ State 188
     T_character  shift, and go to state 155
     '('          shift, and go to state 156
 
-    clause   go to state 194
+    clause   go to state 195
     pattern  go to state 158
 
 
-State 189
+State 190
 
    52 expr: expr . binop expr
   100 clause: pattern "->" expr .
 
     "mod"  shift, and go to state 88
-    ';'    shift, and go to state 89
-    ":="   shift, and go to state 90
-    "||"   shift, and go to state 91
-    "&&"   shift, and go to state 92
-    '='    shift, and go to state 93
-    "<>"   shift, and go to state 94
-    '<'    shift, and go to state 95
-    '>'    shift, and go to state 96
+    "+."   shift, and go to state 89
+    "-."   shift, and go to state 90
+    "*."   shift, and go to state 91
+    "/."   shift, and go to state 92
+    "&&"   shift, and go to state 93
+    "**"   shift, and go to state 94
+    "||"   shift, and go to state 95
+    "<>"   shift, and go to state 96
     "<="   shift, and go to state 97
     ">="   shift, and go to state 98
     "=="   shift, and go to state 99
     "!="   shift, and go to state 100
-    '+'    shift, and go to state 101
-    '-'    shift, and go to state 102
-    "+."   shift, and go to state 103
-    "-."   shift, and go to state 104
-    '*'    shift, and go to state 105
-    '/'    shift, and go to state 106
-    "*."   shift, and go to state 107
-    "/."   shift, and go to state 108
-    "**"   shift, and go to state 109
+    ":="   shift, and go to state 101
+    ';'    shift, and go to state 102
+    '='    shift, and go to state 103
+    '<'    shift, and go to state 104
+    '>'    shift, and go to state 105
+    '+'    shift, and go to state 106
+    '-'    shift, and go to state 107
+    '*'    shift, and go to state 108
+    '/'    shift, and go to state 109
 
     $default  reduce using rule 100 (clause)
 
     binop  go to state 111
 
 
-State 190
+State 191
 
-   39 type: "array" '[' '*' muldim ']' "of" . type
+   40 type: "array" '[' '*' muldim ']' "of" . type
 
     "array"  shift, and go to state 57
     "bool"   shift, and go to state 58
@@ -3269,17 +3303,17 @@ State 190
     T_id     shift, and go to state 63
     '('      shift, and go to state 64
 
-    type  go to state 195
+    type  go to state 196
 
 
-State 191
+State 192
 
    42 muldim: muldim ',' '*' .
 
     $default  reduce using rule 42 (muldim)
 
 
-State 192
+State 193
 
    66 expr: "for" T_id '=' expr "downto" expr "do" . expr "done"
 
@@ -3295,44 +3329,10 @@ State 192
     "not"        shift, and go to state 39
     "true"       shift, and go to state 40
     "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
-    '!'          shift, and go to state 46
-    T_Id         shift, and go to state 47
-    T_id         shift, and go to state 48
-    T_integer    shift, and go to state 49
-    T_real       shift, and go to state 50
-    T_character  shift, and go to state 51
-    T_string     shift, and go to state 52
-    '('          shift, and go to state 53
-
-    letdef  go to state 54
-    expr    go to state 196
-    unop    go to state 56
-
-
-State 193
-
-   65 expr: "for" T_id '=' expr "to" expr "do" . expr "done"
-
-    "begin"      shift, and go to state 31
-    "delete"     shift, and go to state 32
-    "dim"        shift, and go to state 33
-    "false"      shift, and go to state 34
-    "for"        shift, and go to state 35
-    "if"         shift, and go to state 36
-    "let"        shift, and go to state 3
-    "match"      shift, and go to state 37
-    "new"        shift, and go to state 38
-    "not"        shift, and go to state 39
-    "true"       shift, and go to state 40
-    "while"      shift, and go to state 41
-    '+'          shift, and go to state 42
-    '-'          shift, and go to state 43
-    "+."         shift, and go to state 44
-    "-."         shift, and go to state 45
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
     '!'          shift, and go to state 46
     T_Id         shift, and go to state 47
     T_id         shift, and go to state 48
@@ -3349,97 +3349,131 @@ State 193
 
 State 194
 
+   65 expr: "for" T_id '=' expr "to" expr "do" . expr "done"
+
+    "begin"      shift, and go to state 31
+    "delete"     shift, and go to state 32
+    "dim"        shift, and go to state 33
+    "false"      shift, and go to state 34
+    "for"        shift, and go to state 35
+    "if"         shift, and go to state 36
+    "let"        shift, and go to state 3
+    "match"      shift, and go to state 37
+    "new"        shift, and go to state 38
+    "not"        shift, and go to state 39
+    "true"       shift, and go to state 40
+    "while"      shift, and go to state 41
+    "+."         shift, and go to state 42
+    "-."         shift, and go to state 43
+    '+'          shift, and go to state 44
+    '-'          shift, and go to state 45
+    '!'          shift, and go to state 46
+    T_Id         shift, and go to state 47
+    T_id         shift, and go to state 48
+    T_integer    shift, and go to state 49
+    T_real       shift, and go to state 50
+    T_character  shift, and go to state 51
+    T_string     shift, and go to state 52
+    '('          shift, and go to state 53
+
+    letdef  go to state 54
+    expr    go to state 198
+    unop    go to state 56
+
+
+State 195
+
    71 mulclause: mulclause '|' clause .
 
     $default  reduce using rule 71 (mulclause)
 
 
-State 195
+State 196
 
-   36 type: type . "->" type
-   37     | type . "ref"
-   39     | "array" '[' '*' muldim ']' "of" type .
+   37 type: type . "->" type
+   38     | type . "ref"
+   40     | "array" '[' '*' muldim ']' "of" type .
 
     "ref"  shift, and go to state 116
     "->"   shift, and go to state 117
 
-    "ref"     [reduce using rule 39 (type)]
-    "->"      [reduce using rule 39 (type)]
-    $default  reduce using rule 39 (type)
-
-
-State 196
-
-   52 expr: expr . binop expr
-   66     | "for" T_id '=' expr "downto" expr "do" expr . "done"
-
-    "done"  shift, and go to state 198
-    "mod"   shift, and go to state 88
-    ';'     shift, and go to state 89
-    ":="    shift, and go to state 90
-    "||"    shift, and go to state 91
-    "&&"    shift, and go to state 92
-    '='     shift, and go to state 93
-    "<>"    shift, and go to state 94
-    '<'     shift, and go to state 95
-    '>'     shift, and go to state 96
-    "<="    shift, and go to state 97
-    ">="    shift, and go to state 98
-    "=="    shift, and go to state 99
-    "!="    shift, and go to state 100
-    '+'     shift, and go to state 101
-    '-'     shift, and go to state 102
-    "+."    shift, and go to state 103
-    "-."    shift, and go to state 104
-    '*'     shift, and go to state 105
-    '/'     shift, and go to state 106
-    "*."    shift, and go to state 107
-    "/."    shift, and go to state 108
-    "**"    shift, and go to state 109
-
-    binop  go to state 111
+    "ref"     [reduce using rule 40 (type)]
+    "->"      [reduce using rule 40 (type)]
+    $default  reduce using rule 40 (type)
 
 
 State 197
 
    52 expr: expr . binop expr
-   65     | "for" T_id '=' expr "to" expr "do" expr . "done"
+   66     | "for" T_id '=' expr "downto" expr "do" expr . "done"
 
     "done"  shift, and go to state 199
     "mod"   shift, and go to state 88
-    ';'     shift, and go to state 89
-    ":="    shift, and go to state 90
-    "||"    shift, and go to state 91
-    "&&"    shift, and go to state 92
-    '='     shift, and go to state 93
-    "<>"    shift, and go to state 94
-    '<'     shift, and go to state 95
-    '>'     shift, and go to state 96
+    "+."    shift, and go to state 89
+    "-."    shift, and go to state 90
+    "*."    shift, and go to state 91
+    "/."    shift, and go to state 92
+    "&&"    shift, and go to state 93
+    "**"    shift, and go to state 94
+    "||"    shift, and go to state 95
+    "<>"    shift, and go to state 96
     "<="    shift, and go to state 97
     ">="    shift, and go to state 98
     "=="    shift, and go to state 99
     "!="    shift, and go to state 100
-    '+'     shift, and go to state 101
-    '-'     shift, and go to state 102
-    "+."    shift, and go to state 103
-    "-."    shift, and go to state 104
-    '*'     shift, and go to state 105
-    '/'     shift, and go to state 106
-    "*."    shift, and go to state 107
-    "/."    shift, and go to state 108
-    "**"    shift, and go to state 109
+    ":="    shift, and go to state 101
+    ';'     shift, and go to state 102
+    '='     shift, and go to state 103
+    '<'     shift, and go to state 104
+    '>'     shift, and go to state 105
+    '+'     shift, and go to state 106
+    '-'     shift, and go to state 107
+    '*'     shift, and go to state 108
+    '/'     shift, and go to state 109
 
     binop  go to state 111
 
 
 State 198
 
+   52 expr: expr . binop expr
+   65     | "for" T_id '=' expr "to" expr "do" expr . "done"
+
+    "done"  shift, and go to state 200
+    "mod"   shift, and go to state 88
+    "+."    shift, and go to state 89
+    "-."    shift, and go to state 90
+    "*."    shift, and go to state 91
+    "/."    shift, and go to state 92
+    "&&"    shift, and go to state 93
+    "**"    shift, and go to state 94
+    "||"    shift, and go to state 95
+    "<>"    shift, and go to state 96
+    "<="    shift, and go to state 97
+    ">="    shift, and go to state 98
+    "=="    shift, and go to state 99
+    "!="    shift, and go to state 100
+    ":="    shift, and go to state 101
+    ';'     shift, and go to state 102
+    '='     shift, and go to state 103
+    '<'     shift, and go to state 104
+    '>'     shift, and go to state 105
+    '+'     shift, and go to state 106
+    '-'     shift, and go to state 107
+    '*'     shift, and go to state 108
+    '/'     shift, and go to state 109
+
+    binop  go to state 111
+
+
+State 199
+
    66 expr: "for" T_id '=' expr "downto" expr "do" expr "done" .
 
     $default  reduce using rule 66 (expr)
 
 
-State 199
+State 200
 
    65 expr: "for" T_id '=' expr "to" expr "do" expr "done" .
 
