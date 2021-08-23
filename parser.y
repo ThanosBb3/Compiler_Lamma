@@ -150,6 +150,16 @@ par:
 ;
 
 type:
+    type1
+|   type "->" type1
+;
+
+type1:
+    type2
+|   type1 "ref"
+;
+
+type2:
     "unit"
 |   "int"
 |   "char"
@@ -157,10 +167,8 @@ type:
 |   "float"
 |   T_id
 |   '(' type ')'
-|   type "->" type
-|   type "ref"
-|   "array" "of" type
-|   "array" '[' '*' muldim ']' "of" type
+|   "array" "of" type2
+|   "array" '[' '*' muldim ']' "of" type2
 ;
 
 
@@ -170,6 +178,11 @@ muldim:
 ;
 
 expr:
+    expr1
+|   expr binop expr1
+;
+
+expr1:
     T_integer
 |   T_real
 |   T_character
@@ -178,28 +191,56 @@ expr:
 |   "false"
 |   '(' ')'
 |   '(' expr ')'
-|   unop expr
-|   expr binop expr
-|   T_id mulexpr2
-|   T_Id mulexpr2
+|   unop expr1
+|   T_id
+|   T_Id
+|   T_id expr3 mulexpr2
+|   T_Id expr3 mulexpr2
 |   T_id '[' expr mulexpr ']'
 |   "dim" T_id
 |   "dim" T_integer T_id
 |   "new" type
-|   "delete" expr
-|   letdef "in" expr
-|   "begin" expr "end"
-|   "if" expr "then" expr
-|   "if" expr "then" expr "else" expr
-|   "while" expr "do" expr "done"
-|   "for" T_id '=' expr "to" expr "do" expr "done"
-|   "for" T_id '=' expr "downto" expr "do" expr "done"
-|   "match" expr "with" clause mulclause "end"
+|   "delete" expr1
+|   letdef "in" expr1
+|   "begin" expr1 "end"
+|   "if" expr1 "then" expr1
+|   "if" expr1 "then" expr1 "else" expr1
+|   "while" expr1 "do" expr1 "done"
+|   "for" T_id '=' expr1 "to" expr1 "do" expr1 "done"
+|   "for" T_id '=' expr1 "downto" expr1 "do" expr1 "done"
+|   "match" expr1 "with" clause mulclause "end"
+;
+
+expr3:
+    T_integer
+|   T_real
+|   T_character
+|   T_string
+|   "true"
+|   "false"
+|   '(' ')'
+|   '(' expr ')'
+|   unop expr3
+|   T_id
+|   T_Id
+|   T_id '[' expr mulexpr ']'
+|   "dim" T_id
+|   "dim" T_integer T_id
+|   "new" type
+|   "delete" expr3
+|   '(' letdef "in" expr3 ')'
+|   "begin" expr3 "end"
+|   "if" expr3 "then" expr3
+|   "if" expr3 "then" expr3 "else" expr3
+|   "while" expr3 "do" expr3 "done"
+|   "for" T_id '=' expr3 "to" expr3 "do" expr3 "done"
+|   "for" T_id '=' expr3 "downto" expr3 "do" expr3 "done"
+|   "match" expr3 "with" clause mulclause "end"
 ;
 
 mulexpr2:
     /* nothing */
-|   mulexpr2 expr
+|   mulexpr2 expr3
 ;
 
 mulclause:
@@ -246,6 +287,11 @@ clause:
 ;
 
 pattern:
+    pattern1
+|   T_Id pattern1 mulpat
+;
+
+pattern1:
     T_integer
 |   '+' T_integer
 |   '-' T_integer
@@ -257,12 +303,12 @@ pattern:
 |   "false"
 |   T_id
 |   '(' pattern ')'
-|   T_Id mulpat
+|   T_Id
 ;
 
 mulpat:
     /* nothing */
-|   pattern mulpat
+|   mulpat pattern1
 ;
 
 
