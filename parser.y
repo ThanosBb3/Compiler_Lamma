@@ -54,20 +54,19 @@
 %token T_def ":="
 
 
-%nonassoc T_let T_in
+%nonassoc "in"
 %left ';'
-%nonassoc T_if T_then
 %nonassoc ":="
 %left "||"
 %left "&&"
-%nonassoc '=' "<>" '<' '>' "<=" ">=" "==" "!="
+%nonassoc '=' "<>" '<' '>' "<=" ">=" "==" "!=" 
 %left '+' '-' "+." "-."
-%left '*' '/' "*." "/." 
+%left '*' '/' "*." "/." "mod"
 %right "**"
-%nonassoc T_not T_delete
+%nonassoc UNOP "not" "delete"
 %nonassoc '!'
 %nonassoc '[' ']'
-%nonassoc T_new
+%nonassoc "new"
 
 
 
@@ -98,12 +97,12 @@ muldef:
 ;
 
 def:
-    T_id mulpar '=' expr
-|   T_id mulpar ':' type '=' expr
+    T_id mulpar '=' expr1
+|   T_id mulpar ':' type '=' expr1
 |   "mutable" T_id
 |   "mutable" T_id ':' type
-|   "mutable" T_id '[' expr mulexpr ']'
-|   "mutable" T_id '[' expr mulexpr ']' ':' type
+|   "mutable" T_id '[' expr1 mulexpr ']'
+|   "mutable" T_id '[' expr1 mulexpr ']' ':' type
 ;
 
 mulpar:
@@ -113,7 +112,7 @@ mulpar:
 
 mulexpr:
     /* nothing */
-|   mulexpr ',' expr
+|   mulexpr ',' expr1
 ;
 
 typedef:
@@ -177,12 +176,23 @@ muldim:
 |   muldim ',' '*'
 ;
 
-expr:
-    expr1
-|   expr binop expr1
+expr1:
+    expr3
+|   T_id expr2 mulexpr2
+|   T_Id expr2 mulexpr2
 ;
 
-expr1:
+expr2:
+    '(' letdef "in" expr1 ')'
+|   expr
+;
+
+expr3:
+    letdef "in" expr1
+|   expr
+;
+
+expr:
     T_integer
 |   T_real
 |   T_character
@@ -190,18 +200,42 @@ expr1:
 |   "true"
 |   "false"
 |   '(' ')'
-|   '(' expr ')'
-|   unop expr1
+|   '(' expr1 ')'
 |   T_id
 |   T_Id
-|   T_id expr3 mulexpr2
-|   T_Id expr3 mulexpr2
-|   T_id '[' expr mulexpr ']'
+|   T_id '[' expr1 mulexpr ']'
+|   '+' expr    %prec UNOP
+|   '-' expr    %prec UNOP
+|   "+." expr   %prec UNOP
+|   "-." expr   %prec UNOP
+|   '!' expr
+|   "not" expr
+|   expr '+' expr
+|   expr '-' expr
+|   expr "+." expr
+|   expr "-." expr
+|   expr '*' expr
+|   expr "*." expr
+|   expr '/' expr
+|   expr "/." expr
+|   expr "mod" expr
+|   expr "**" expr
+|   expr '=' expr
+|   expr "<>" expr
+|   expr '<' expr
+|   expr '>' expr
+|   expr "<=" expr
+|   expr ">=" expr
+|   expr "==" expr
+|   expr "!=" expr
+|   expr "&&" expr
+|   expr "||" expr
+|   expr ';' expr
+|   expr ":=" expr 
 |   "dim" T_id
 |   "dim" T_integer T_id
 |   "new" type
-|   "delete" expr1
-|   letdef "in" expr1
+|   "delete" expr
 |   "begin" expr1 "end"
 |   "if" expr1 "then" expr1
 |   "if" expr1 "then" expr1 "else" expr1
@@ -211,36 +245,9 @@ expr1:
 |   "match" expr1 "with" clause mulclause "end"
 ;
 
-expr3:
-    T_integer
-|   T_real
-|   T_character
-|   T_string
-|   "true"
-|   "false"
-|   '(' ')'
-|   '(' expr ')'
-|   unop expr3
-|   T_id
-|   T_Id
-|   T_id '[' expr mulexpr ']'
-|   "dim" T_id
-|   "dim" T_integer T_id
-|   "new" type
-|   "delete" expr3
-|   '(' letdef "in" expr3 ')'
-|   "begin" expr3 "end"
-|   "if" expr3 "then" expr3
-|   "if" expr3 "then" expr3 "else" expr3
-|   "while" expr3 "do" expr3 "done"
-|   "for" T_id '=' expr3 "to" expr3 "do" expr3 "done"
-|   "for" T_id '=' expr3 "downto" expr3 "do" expr3 "done"
-|   "match" expr3 "with" clause mulclause "end"
-;
-
 mulexpr2:
     /* nothing */
-|   mulexpr2 expr3
+|   mulexpr2 expr2
 ;
 
 mulclause:
@@ -248,42 +255,9 @@ mulclause:
 |   mulclause '|' clause
 ;
 
-unop:
-    '+'
-|   '-'
-|   "+."
-|   "-."
-|   '!'
-|   "not"
-;
-
-binop:
-    '+'
-|   '-'
-|   '*'
-|   '/'
-|   "+."
-|   "-."
-|   "*."
-|   "/."
-|   "mod"
-|   "**"
-|   '='
-|   "<>"
-|   '<'
-|   '>'
-|   "<="
-|   ">="
-|   "=="
-|   "!="
-|   "&&"
-|   "||"
-|   ';'
-|   ":="
-;
 
 clause:
-    pattern "->" expr
+    pattern "->" expr1
 ;
 
 pattern:
@@ -293,11 +267,11 @@ pattern:
 
 pattern1:
     T_integer
-|   '+' T_integer
-|   '-' T_integer
+|   '+' T_integer %prec UNOP
+|   '-' T_integer %prec UNOP
 |   T_real
-|   "+." T_real
-|   "-." T_real
+|   "+." T_real   %prec UNOP
+|   "-." T_real   %prec UNOP
 |   T_character
 |   "true"
 |   "false"

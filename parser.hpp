@@ -93,12 +93,13 @@ extern int yydebug;
     T_eq = 303,
     T_neq = 304,
     T_def = 305,
-    T_Id = 306,
-    T_id = 307,
-    T_integer = 308,
-    T_real = 309,
-    T_character = 310,
-    T_string = 311
+    UNOP = 306,
+    T_Id = 307,
+    T_id = 308,
+    T_integer = 309,
+    T_real = 310,
+    T_character = 311,
+    T_string = 312
   };
 #endif
 
