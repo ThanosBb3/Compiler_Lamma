@@ -2,7 +2,6 @@
     #include <cstdio>
     #include <cstdlib>
     #include "lexer.hpp"
-    #include "ast.hpp"
 %}
     
 %token T_and "and"
@@ -82,208 +81,198 @@
 %%
 
 program:
-    /* nothing */
-|   program letdef 
-|   program typedef
+    deflist {
+    std::cout << "AST: " << *$1 << std::endl;
+    //$1->run();
+  }
+;
+
+deflist:
+    /* nothing */    { $$ = new Block(); }
+|   deflist letdef   { $1->append($2); $$ = $1; }
+|   deflist typedef  { $1->append($2); $$ = $1; }
 ;
 
 letdef:
-    "let" def muldef       
-|   "let" "rec" def muldef
+    "let" muldef             { $$ = new Let(false,$2); } 
+|   "let" "rec" muldef       { $$ = new Let(true,$3); }
 ;
 
 muldef:
-    /* nothing */
-|   muldef "and" def
+    def                 { $$ = new Deflist(); $$->append($1); }
+|   muldef "and" def    { $1->append($3); $$ = $1; }
 ;
 
 def:
-    T_id mulpar '=' expr1
-|   T_id mulpar ':' type '=' expr1
-|   "mutable" T_id
-|   "mutable" T_id ':' type
-|   "mutable" T_id '[' expr1 mulexpr ']'
-|   "mutable" T_id '[' expr1 mulexpr ']' ':' type
+    T_id mulpar '=' expr                                      { $$ = new Def($1, $2, $4); }
+|   T_id mulpar ':' type '=' expr                             { $$ = new Def($1, $2, $6, $4); }
+|   "mutable" T_id                                            { $$ = new Def($2); }
+|   "mutable" T_id ':' type                                   { $$ = new Def($2, nullptr, nullptr, $4); }
+|   "mutable" T_id '[' mulexpr ']'                            { $$ = new Def($2, nullptr, nullptr, nullptr, $4); }
+|   "mutable" T_id '[' mulexpr ']' ':' type                   { $$ = new Def($2, nullptr, nullptr, $7, $4); }
 ;
 
 mulpar:
-    /* nothing */
-|   mulpar par
+    /* nothing */   { $$ = new Parlist(); }
+|   mulpar par      { $1->append($2); $$ = $1; }
 ;
 
 mulexpr:
-    /* nothing */
-|   mulexpr ',' expr1
+    expr                    { $$ = new Exprlist(); $$->append($1); }
+|   mulexpr ',' expr        { $1->append($3); $$ = $1; }
 ;
 
 typedef:
-    "type" tdef multdef
+    "type" multdef          { $$ = new Mytype($2); }
 ;
 
 multdef:
-    /* nothing */
-|   multdef "and" tdef
+    tdef                    { $$ = new Tdeflist(); $$->append($1); }
+|   multdef "and" tdef      { $1->append($3); $$ = $1; }
 ;
 
 tdef:
-    T_id '=' constr mulconstr
+    T_id '=' mulconstr      { $$ = new Tdef($1, $3); }
 ;
 
 mulconstr:
-    /* nothing */
-|   mulconstr '|' constr
+    constr                      { $$ = new Constrlist(); $$->append($1); }
+|   mulconstr '|' constr        { $1->append($3); $$ = $1; }
 ;
 
 constr:
-    T_Id
-|   T_Id "of" type multype
+    T_Id                        { $$ = new Constr($1); }
+|   T_Id "of" multype           { $$ = new Constr($1, $3); }
 ;
 
 multype:
-    /* nothing */
-|   multype type
+    type                        { $$ = new Typelist(); $$->append($1); }
+|   multype type                { $1->append($2); $$ = $1; }
 ;
 
 par:
-    T_id
-|   '(' T_id ':' type ')'
+    T_id                        { $$ = new Par($1); }
+|   '(' T_id ':' type ')'       { $$ = new Par($2, $4); }
 ;
 
 type:
-    type1
-|   type "->" type1
-;
-
-type1:
-    type2
-|   type1 "ref"
-;
-
-type2:
-    "unit"
-|   "int"
-|   "char"
-|   "bool"
-|   "float"
-|   T_id
-|   '(' type ')'
-|   "array" "of" type2
-|   "array" '[' '*' muldim ']' "of" type2
+    "unit"                                      { $$ = new Unit(); }
+|   "int"                                       { $$ = new Integer(); }
+|   "char"                                      { $$ = new Char(); }
+|   "bool"                                      { $$ = new Boolean(); }
+|   "float"                                     { $$ = new Real(); }
+|   T_id                                        { $$ = new Id(false, $1); }
+|   '(' type ')'                                { $$ = $2; }
+|   type "ref"                                  { $$ = Tref($1); }
+|   type "->" type                              { $$ = Tfun($1, $3); }
+|   "array" "of" type                           { $$ = new Array($3); }
+|   "array" '[' muldim ']' "of" type            { $$ = new Array($6, $3); }
 ;
 
 
 muldim:
-    /* nothing */
-|   muldim ',' '*'
-;
-
-expr1:
-    expr3
-|   T_id expr2 mulexpr2
-|   T_Id expr2 mulexpr2
-;
-
-expr2:
-    '(' letdef "in" expr1 ')'
-|   expr
-;
-
-expr3:
-    letdef "in" expr1
-|   expr
+    '*'                     { $$ = 1; }
+|   muldim ',' '*'          { $$ = $1 + 1; }
 ;
 
 expr:
-    T_integer
-|   T_real
-|   T_character
-|   T_string
-|   "true"
-|   "false"
-|   '(' ')'
-|   '(' expr1 ')'
-|   T_id
-|   T_Id
-|   T_id '[' expr1 mulexpr ']'
-|   '+' expr    %prec UNOP
-|   '-' expr    %prec UNOP
-|   "+." expr   %prec UNOP
-|   "-." expr   %prec UNOP
-|   '!' expr
-|   "not" expr
-|   expr '+' expr
-|   expr '-' expr
-|   expr "+." expr
-|   expr "-." expr
-|   expr '*' expr
-|   expr "*." expr
-|   expr '/' expr
-|   expr "/." expr
-|   expr "mod" expr
-|   expr "**" expr
-|   expr '=' expr
-|   expr "<>" expr
-|   expr '<' expr
-|   expr '>' expr
-|   expr "<=" expr
-|   expr ">=" expr
-|   expr "==" expr
-|   expr "!=" expr
-|   expr "&&" expr
-|   expr "||" expr
-|   expr ';' expr
-|   expr ":=" expr 
-|   "dim" T_id
-|   "dim" T_integer T_id
-|   "new" type
-|   "delete" expr
-|   "begin" expr1 "end"
-|   "if" expr1 "then" expr1
-|   "if" expr1 "then" expr1 "else" expr1
-|   "while" expr1 "do" expr1 "done"
-|   "for" T_id '=' expr1 "to" expr1 "do" expr1 "done"
-|   "for" T_id '=' expr1 "downto" expr1 "do" expr1 "done"
-|   "match" expr1 "with" clause mulclause "end"
+    expr '+' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr '-' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr "+." expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr "-." expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr '*' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr "*." expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr '/' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr "/." expr                                      { $$ = new Binop($1, $2, $3); }     
+|   expr "mod" expr                                     { $$ = new Binop($1, $2, $3); }
+|   expr "**" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr '=' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr "<>" expr                                      { $$ = new Binop($1, $2, $3); } 
+|   expr '<' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr '>' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr "<=" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr ">=" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr "==" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr "!=" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr "&&" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr "||" expr                                      { $$ = new Binop($1, $2, $3); }
+|   expr ';' expr                                       { $$ = new Binop($1, $2, $3); }
+|   expr ":=" expr                                      { $$ = new Binop($1, $2, $3); }
+|   '+' expr    %prec UNOP                              { $$ = new Unop($1, $2); }
+|   '-' expr    %prec UNOP                              { $$ = new Unop($1, $2); }
+|   "+." expr   %prec UNOP                              { $$ = new Unop($1, $2); }
+|   "-." expr   %prec UNOP                              { $$ = new Unop($1, $2); }
+|   "not" expr                                          { $$ = new Unop($1, $2); }
+|   T_id mulexpr2                                       { $$ = new Callfun($1, $2); }
+|   T_Id mulexpr2                                       { $$ = new Callconstr($1, $2); }
+|   letdef "in" expr                                    { $$ = new Letin($1, $3); }
+|   "dim" T_id                                          { $$ = new Dim($2); }
+|   "dim" T_integer T_id                                { $$ = new Dim($3, $2); }
+|   "new" type                                          { $$ = new New($2); }
+|   "delete" expr                                       { $$ = new Delete($2); }
+|   "begin" expr "end"                                  { $$ = $2; }
+|   "if" expr "then" expr                               { $$ = new If($2, $4); }
+|   "if" expr "then" expr "else" expr                   { $$ = new If($2, $4, $6); }
+|   "while" expr "do" expr "done"                       { $$ = new While($2, $4); }
+|   "for" T_id '=' expr "to" expr "do" expr "done"      { $$ = new For(false, $2, $4, $6, $8); }
+|   "for" T_id '=' expr "downto" expr "do" expr "done"  { $$ = new For(true, $2, $4, $6, $8); }
+|   "match" expr "with" mulclause "end"                 { $$ = new Match($2, $4); }
+|   valexpr                                             { $$ = $1; }
 ;
 
 mulexpr2:
-    /* nothing */
-|   mulexpr2 expr2
+    valexpr                                             { $$ = new Exprlist(); $$->append($1); }
+|   mulexpr2 valexpr                                    { $1->append($3); $$ = $1; }
+;
+
+valexpr:
+    T_integer                                           { $$ = new Constint($1, false); }
+|   T_real                                              { $$ = new Constreal($1, false); }
+|   T_character                                         { $$ = new Constchar($1); }
+|   T_string                                            { $$ = new Conststr($1); }
+|   "true"                                              { $$ = new Constbool(1); }
+|   "false"                                             { $$ = new Constbool(0); }
+|   '(' ')'                                             { $$ = new Constunit(); }
+|   '(' expr ')'                                        { $$ = $2; }
+|   T_id                                                { $$ = new Id(false, $1); }
+|   T_Id                                                { $$ - new Id(true, $1); }
+|   T_id '[' mulexpr ']'                                { $$ = new Arrayitem($1, $3)}
+|   '!' valexpr                                         { $$ = new Deref($2); }
 ;
 
 mulclause:
-    /* nothing */
-|   mulclause '|' clause
+    clause                                  { $$ = new Clauselist(); $$->append($1); }
+|   mulclause '|' clause                    { $1->append($3); $$ = $1; }
 ;
 
 
 clause:
-    pattern "->" expr1
+    pattern "->" expr                       { $$ = new Clause($1, $3); }
 ;
 
 pattern:
-    pattern1
-|   T_Id pattern1 mulpat
+    pattern1                            { $$ = $1; }                  
+|   T_Id mulpat                         { $$ = new Patlist($1, $2); }
 ;
 
 pattern1:
-    T_integer
-|   '+' T_integer %prec UNOP
-|   '-' T_integer %prec UNOP
-|   T_real
-|   "+." T_real   %prec UNOP
-|   "-." T_real   %prec UNOP
-|   T_character
-|   "true"
-|   "false"
-|   T_id
-|   '(' pattern ')'
-|   T_Id
+    T_integer                           { $$ = new Constint($1, false); }
+|   '+' T_integer %prec UNOP            { $$ = new Constint($2, false); }
+|   '-' T_integer %prec UNOP            { $$ = new Constint($2, true); }
+|   T_real                              { $$ = new Constreal($1, false); }
+|   "+." T_real   %prec UNOP            { $$ = new Constreal($1, false); }
+|   "-." T_real   %prec UNOP            { $$ = new Constreal($1, true); }
+|   T_character                         { $$ = new Constchar($1); }
+|   "true"                              { $$ = new Constbool(1); }
+|   "false"                             { $$ = new Constbool(0); }
+|   T_id                                { $$ = new Id(false, $1); }
+|   '(' pattern ')'                     { $$ = $2; }
+|   T_Id                                { $$ = new Id(true, $1); }
 ;
 
 mulpat:
-    /* nothing */
-|   mulpat pattern1
+    /* nothing */                       { $$ = new Patterns(); }
+|   mulpat pattern1                     { $1->append($2); $$ = $1; }
 ;
 
 

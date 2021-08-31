@@ -81,28 +81,32 @@
 %%
 
 program:
+    deflist
+;
+
+deflist:
     /* nothing */
-|   program letdef 
-|   program typedef
+|   deflist letdef 
+|   deflist typedef
 ;
 
 letdef:
-    "let" def muldef       
-|   "let" "rec" def muldef
+    "let" muldef       
+|   "let" "rec" muldef
 ;
 
 muldef:
-    /* nothing */
+    def
 |   muldef "and" def
 ;
 
 def:
-    T_id mulpar '=' expr1
-|   T_id mulpar ':' type '=' expr1
+    T_id mulpar '=' expr
+|   T_id mulpar ':' type '=' expr
 |   "mutable" T_id
 |   "mutable" T_id ':' type
-|   "mutable" T_id '[' expr1 mulexpr ']'
-|   "mutable" T_id '[' expr1 mulexpr ']' ':' type
+|   "mutable" T_id '[' expr mulexpr ']'
+|   "mutable" T_id '[' expr mulexpr ']' ':' type
 ;
 
 mulpar:
@@ -112,7 +116,7 @@ mulpar:
 
 mulexpr:
     /* nothing */
-|   mulexpr ',' expr1
+|   mulexpr ',' expr
 ;
 
 typedef:
@@ -148,17 +152,8 @@ par:
 |   '(' T_id ':' type ')'
 ;
 
+
 type:
-    type1
-|   type "->" type1
-;
-
-type1:
-    type2
-|   type1 "ref"
-;
-
-type2:
     "unit"
 |   "int"
 |   "char"
@@ -166,8 +161,10 @@ type2:
 |   "float"
 |   T_id
 |   '(' type ')'
-|   "array" "of" type2
-|   "array" '[' '*' muldim ']' "of" type2
+|   type "ref"
+|   type "->" type
+|   "array" "of" type
+|   "array" '[' '*' muldim ']' "of" type
 ;
 
 
@@ -176,41 +173,8 @@ muldim:
 |   muldim ',' '*'
 ;
 
-expr1:
-    expr3
-|   T_id expr2 mulexpr2
-|   T_Id expr2 mulexpr2
-;
-
-expr2:
-    '(' letdef "in" expr1 ')'
-|   expr
-;
-
-expr3:
-    letdef "in" expr1
-|   expr
-;
-
 expr:
-    T_integer
-|   T_real
-|   T_character
-|   T_string
-|   "true"
-|   "false"
-|   '(' ')'
-|   '(' expr1 ')'
-|   T_id
-|   T_Id
-|   T_id '[' expr1 mulexpr ']'
-|   '+' expr    %prec UNOP
-|   '-' expr    %prec UNOP
-|   "+." expr   %prec UNOP
-|   "-." expr   %prec UNOP
-|   '!' expr
-|   "not" expr
-|   expr '+' expr
+    expr '+' expr
 |   expr '-' expr
 |   expr "+." expr
 |   expr "-." expr
@@ -231,23 +195,47 @@ expr:
 |   expr "&&" expr
 |   expr "||" expr
 |   expr ';' expr
-|   expr ":=" expr 
+|   expr ":=" expr
+|   '+' expr    %prec UNOP
+|   '-' expr    %prec UNOP
+|   "+." expr   %prec UNOP
+|   "-." expr   %prec UNOP
+|   T_id mulexpr2
+|   T_Id mulexpr2
+|   letdef "in" expr
 |   "dim" T_id
 |   "dim" T_integer T_id
 |   "new" type
 |   "delete" expr
-|   "begin" expr1 "end"
-|   "if" expr1 "then" expr1
-|   "if" expr1 "then" expr1 "else" expr1
-|   "while" expr1 "do" expr1 "done"
-|   "for" T_id '=' expr1 "to" expr1 "do" expr1 "done"
-|   "for" T_id '=' expr1 "downto" expr1 "do" expr1 "done"
-|   "match" expr1 "with" clause mulclause "end"
+|   "begin" expr "end"
+|   "if" expr "then" expr
+|   "if" expr "then" expr "else" expr
+|   "while" expr "do" expr "done"
+|   "for" T_id '=' expr "to" expr "do" expr "done"
+|   "for" T_id '=' expr "downto" expr "do" expr "done"
+|   "match" expr "with" clause mulclause "end"
+|   valexpr
 ;
 
 mulexpr2:
-    /* nothing */
-|   mulexpr2 expr2
+    valexpr
+|   mulexpr2 valexpr
+;
+
+valexpr:
+    T_integer
+|   T_real
+|   T_character
+|   T_string
+|   "true"
+|   "false"
+|   '(' ')'
+|   '(' expr ')'
+|   T_id
+|   T_Id
+|   T_id '[' expr mulexpr ']'
+|   '!' valexpr
+|   "not" valexpr
 ;
 
 mulclause:
@@ -257,7 +245,7 @@ mulclause:
 
 
 clause:
-    pattern "->" expr1
+    pattern "->" expr
 ;
 
 pattern:
