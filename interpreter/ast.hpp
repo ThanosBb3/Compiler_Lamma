@@ -300,7 +300,27 @@ private:
   Exprlist *elist;
 };
 
-
+class Deflist: public AST {
+public:
+  Deflist(): dlist(), size(0) {}
+  ~Deflist() {
+    for (Def *d : dlist) delete d;
+  }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Deflist(";
+    bool first = true;
+    for (Def *d : dlist) {
+      if (!first) out << ", ";
+      first = false;
+      out << *d;
+    }
+    out << ")";
+  }
+  
+private:
+  std::vector<Def *> dlist;
+  int size;
+};
 
 
 
