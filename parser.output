@@ -1,8 +1,5 @@
-State 163 conflicts: 2 shift/reduce
-State 166 conflicts: 2 shift/reduce
 State 172 conflicts: 23 shift/reduce
 State 214 conflicts: 22 shift/reduce
-State 226 conflicts: 2 shift/reduce
 
 
 Grammar
@@ -4120,10 +4117,7 @@ State 163
    40     | "array" "of" type .
 
     "ref"  shift, and go to state 123
-    "->"   shift, and go to state 124
 
-    "ref"     [reduce using rule 40 (type)]
-    "->"      [reduce using rule 40 (type)]
     $default  reduce using rule 40 (type)
 
 
@@ -4152,8 +4146,6 @@ State 166
     "ref"  shift, and go to state 123
     "->"   shift, and go to state 124
 
-    "ref"     [reduce using rule 39 (type)]
-    "->"      [reduce using rule 39 (type)]
     $default  reduce using rule 39 (type)
 
 
@@ -5304,10 +5296,7 @@ State 226
    41     | "array" '[' '*' muldim ']' "of" type .
 
     "ref"  shift, and go to state 123
-    "->"   shift, and go to state 124
 
-    "ref"     [reduce using rule 41 (type)]
-    "->"      [reduce using rule 41 (type)]
     $default  reduce using rule 41 (type)
 
 

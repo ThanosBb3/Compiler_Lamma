@@ -68,7 +68,9 @@
 %nonassoc '[' ']'
 %nonassoc "new"
 
-
+%right "->"
+%nonassoc "of"
+%nonassoc "ref"
 
 %token T_Id 
 %token T_id 

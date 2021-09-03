@@ -68,7 +68,9 @@
 %nonassoc '[' ']'
 %nonassoc "new"
 
-
+%right "->"
+%nonassoc "of"
+%nonassoc "ref"
 
 %token T_Id 
 %token T_id 
@@ -92,6 +94,9 @@ deflist:
 |   deflist letdef   { $1->append($2); $$ = $1; }
 |   deflist typedef  { $1->append($2); $$ = $1; }
 ;
+
+
+
 
 letdef:
     "let" muldef             { $$ = new Let(false,$2); } 
@@ -203,8 +208,8 @@ expr:
 |   "+." expr   %prec UNOP                              { $$ = new Unop($1, $2); }
 |   "-." expr   %prec UNOP                              { $$ = new Unop($1, $2); }
 |   "not" expr                                          { $$ = new Unop($1, $2); }
-|   T_id mulexpr2                                       { $$ = new Callfun($1, $2); }
-|   T_Id mulexpr2                                       { $$ = new Callconstr($1, $2); }
+|   T_id mulexpr2                                       { $$ = new Call($1, $2); }
+|   T_Id mulexpr2                                       { $$ = new Call($1, $2); }
 |   letdef "in" expr                                    { $$ = new Letin($1, $3); }
 |   "dim" T_id                                          { $$ = new Dim($2); }
 |   "dim" T_integer T_id                                { $$ = new Dim($3, $2); }
