@@ -1,6 +1,7 @@
 %{
     #include <cstdio>
     #include <cstdlib>
+    #include "ast.hpp"
     #include "lexer.hpp"
 %}
     
@@ -27,7 +28,7 @@
 %token T_mod "mod"
 %token T_mutable "mutable"
 %token T_new "new"
-%token T_not "not"
+%token<op> T_not "not"
 %token T_of "of"
 %token T_rec "rec"
 %token T_ref "ref"
@@ -55,29 +56,83 @@
 
 
 %nonassoc "in"
-%left ';'
-%nonassoc ":="
-%left "||"
-%left "&&"
-%nonassoc '=' "<>" '<' '>' "<=" ">=" "==" "!=" 
-%left '+' '-' "+." "-."
-%left '*' '/' "*." "/." "mod"
-%right "**"
+%left<op> ';'
+%nonassoc<op> ":="
+%left<op> "||"
+%left<op> "&&"
+%nonassoc<op> '=' "<>" '<' '>' "<=" ">=" "==" "!=" 
+%left<op> '+' '-' "+." "-."
+%left<op> '*' '/' "*." "/." "mod"
+%right<op> "**"
 %nonassoc UNOP "not" "delete"
-%nonassoc '!'
-%nonassoc '[' ']'
+%nonassoc<op> '!'
+%nonassoc<op> '[' ']'
 %nonassoc "new"
 
-%right "->"
+%right<op> "->"
 %nonassoc "of"
 %nonassoc "ref"
 
-%token T_Id 
-%token T_id 
-%token T_integer
-%token T_real 
-%token T_character 
-%token T_string 
+%token<id> T_Id 
+%token<id> T_id 
+%token<num> T_integer
+%token<flo> T_real 
+%token<ch> T_character 
+%token<str> T_string 
+
+%union {
+    int num;
+    double flo;
+    char *op;
+    char *str;
+    char *ch;
+    char *id;
+
+    Block *block;
+    Let *let;
+    Deflist *deflist;
+    Def *def;
+    Parlist *parlist;
+    Exprlist *exprlist;
+    Mytype *mytype;
+    Tdeflist *tdeflist;
+    Tdef *tdef;
+    Constrlist *constrlist;
+    Constr *constr;
+    Typelist *typelist;
+    Par *par;
+    Type *type;
+    Expr *expr;
+    Valexprlist *valexprlist;
+    Valexpr *valexpr;
+    Clauselist *clauselist;
+    Clause *clause;
+    Pattern *pattern;
+
+}
+
+%type<block> deflist
+%type<let> letdef
+%type<deflist> muldef
+%type<def> def
+%type<parlist> mulpar
+%type<exprlist> mulexpr
+%type<mytype> typedef
+%type<tdeflist> multdef
+%type<tdef> tdef
+%type<constrlist> mulconstr
+%type<constr> constr
+%type<typelist> multype
+%type<par> par
+%type<type> type
+%type<num> muldim
+%type<expr> expr
+%type<valexprlist> mulexpr2 mulpat
+%type<valexpr> valexpr pattern1
+%type<clauselist> mulclause
+%type<clause> clause
+%type<pattern> pattern
+
 
 
 %%
@@ -166,7 +221,7 @@ type:
 |   "char"                                      { $$ = new Char(); }
 |   "bool"                                      { $$ = new Boolean(); }
 |   "float"                                     { $$ = new Real(); }
-|   T_id                                        { $$ = new Id(false, $1); }
+|   T_id                                        { $$ = new Typeid($1); }
 |   '(' type ')'                                { $$ = $2; }
 |   type "ref"                                  { $$ = Tref($1); }
 |   type "->" type                              { $$ = Tfun($1, $3); }
@@ -226,8 +281,8 @@ expr:
 ;
 
 mulexpr2:
-    valexpr                                             { $$ = new Exprlist(); $$->append($1); }
-|   mulexpr2 valexpr                                    { $1->append($3); $$ = $1; }
+    valexpr                                             { $$ = new Valexprlist(); $$->append($1); }
+|   mulexpr2 valexpr                                    { $1->append($2); $$ = $1; }
 ;
 
 valexpr:
@@ -257,7 +312,7 @@ clause:
 
 pattern:
     pattern1                            { $$ = $1; }                  
-|   T_Id mulpat                         { $$ = new Patlist($1, $2); }
+|   T_Id mulpat                         { $$ = new Pattern($1, $2); }
 ;
 
 pattern1:
@@ -276,7 +331,7 @@ pattern1:
 ;
 
 mulpat:
-    /* nothing */                       { $$ = new Patterns(); }
+    /* nothing */                       { $$ = new Valexprlist(); }
 |   mulpat pattern1                     { $1->append($2); $$ = $1; }
 ;
 

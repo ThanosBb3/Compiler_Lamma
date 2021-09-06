@@ -1,4 +1,5 @@
 %{
+#include "ast.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
@@ -41,10 +42,10 @@ hex [0-9a-f]
 "int" { return T_int; }
 "let" {return T_let; }
 "match" { return T_match; }
-"mod" { return T_mod; }
+"mod" {yylval.op = strdup(yytext); return T_mod; }
 "mutable" { return T_mutable; }
 "new" { return T_new; }
-"not" { return T_not; }
+"not" {yylval.op = strdup(yytext); return T_not; }
 "of" {return T_of; }
 "rec" { return T_rec; }
 "ref" { return T_ref; }
@@ -56,29 +57,32 @@ hex [0-9a-f]
 "while" { return T_while; }
 "with" { return T_with; }
 
-"->" { return T_arrow; }
-"+." { return T_fplus; }
-"-." { return T_fminus; }
-"*." { return T_fmul; }
-"/." { return T_fdiv; }
-"&&" { return T_land; }
-"**" { return T_power; }
-"||" { return T_lor; }
-"<>" { return T_diff; }
-"<=" { return T_leq; }
-">=" { return T_geq; }
-"==" { return T_eq; }
-"!=" { return T_neq; }
-":=" { return T_def; }
+"->" {yylval.op = strdup(yytext); return T_arrow; }
+"+." {yylval.op = strdup(yytext); return T_fplus; }
+"-." {yylval.op = strdup(yytext); return T_fminus; }
+"*." {yylval.op = strdup(yytext); return T_fmul; }
+"/." {yylval.op = strdup(yytext); return T_fdiv; }
+"&&" {yylval.op = strdup(yytext); return T_land; }
+"**" {yylval.op = strdup(yytext); return T_power; }
+"||" {yylval.op = strdup(yytext); return T_lor; }
+"<>" {yylval.op = strdup(yytext); return T_diff; }
+"<=" {yylval.op = strdup(yytext); return T_leq; }
+">=" {yylval.op = strdup(yytext); return T_geq; }
+"==" {yylval.op = strdup(yytext); return T_eq; }
+"!=" {yylval.op = strdup(yytext); return T_neq; }
+":=" {yylval.op = strdup(yytext); return T_def; }
 
-{LL}({LL}|{Ll}|{D}|_)* {return T_Id; }
-{Ll}({LL}|{Ll}|{D}|_)* {return T_id; }
-{D}+\.{D}+((e|E)(\-|\+)?{D}+)? { return T_real; }
-{D}+ { return T_integer; }
-\'([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})\' {return T_character; }
-\"([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})+\" { return T_string; }
+{LL}({LL}|{Ll}|{D}|_)* {yylval.id = strdup(yytext); return T_Id; }
+{Ll}({LL}|{Ll}|{D}|_)* {yylval.id = strdup(yytext); return T_id; }
+{D}+\.{D}+((e|E)(\-|\+)?{D}+)? {yylval.flo = std::stod(yytext); return T_real; }
+{D}+ {yylval.num = std::stoi(yytext); return T_integer; }
+\'([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})\' {yylval.ch = strdup(yytext); return T_character; }
+\"([^\'\"\\\n\t\r\0\\\'\"]|\\n|\\t|\\r|\\0|\\\\|\\\'|\\\"|\\x{hex}{hex})+\" {yylval.str = strdup(yytext); return T_string; }
 
-[\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:] { return yytext[0]; }
+[\=\|\+\-\*\/\!\;\<\>\[\]] {yylval.op = strdup(yytext); return yytext[0]; }
+
+[\(\)\,\:] { return yytext[0]; }
+
 
 {W}+ { /* nothing */ }
 "--".*\n { lines++; }
