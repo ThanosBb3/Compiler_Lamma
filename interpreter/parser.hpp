@@ -119,20 +119,20 @@ union YYSTYPE
 
     Block *block;
     Let *let;
-    Deflist *deflist;
+    Deflist *dlist;
     Def *def;
-    Parlist *parlist;
-    Exprlist *exprlist;
+    Parlist *pplist;
+    Exprlist *elist;
     Mytype *mytype;
-    Tdeflist *tdeflist;
+    Tdeflist *ttlist;
     Tdef *tdef;
-    Constrlist *constrlist;
+    Constrlist *cclist;
     Constr *constr;
     Typelist *typelist;
     Par *par;
     Type *type;
     Expr *expr;
-    Valexprlist *valexprlist;
+    Valexprlist *vlist;
     Valexpr *valexpr;
     Clauselist *clauselist;
     Clause *clause;

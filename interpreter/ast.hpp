@@ -35,6 +35,7 @@ public:
     }
     out << ")";
   }
+  void append(Expr *ee) { elist.push_back(ee); }
   
 private:
   std::vector<Expr *> elist;
@@ -67,19 +68,6 @@ public:
 private:
   const char *op;
   Expr *right;
-};
-
-class Call: public Expr {
-public:
-  Call(char *i, Exprlist *l): id(i), list(l) {}
-  ~Call() { delete id; delete list; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Call" << "(" << id << ", " << *list << ")";
-  }
-
-private:
-  char *id;
-  Exprlist *list;
 };
 
 
@@ -153,47 +141,6 @@ class BlockComponent : public AST{
 
 };
 
-class Let: public BlockComponent {
-public:
-  Let(bool b, Deflist *l):
-    check(b), dlist(l) {}
-  ~Let() { delete dlist; }
-  virtual void printOn(std::ostream &out) const override {
-    if (check) out << "LetRec(" << *dlist << ")";
-    out << "Let(" << *dlist << ")";
-  }
-
-private:
-  bool check;
-  Deflist *dlist;
-};
-
-class Letin: public Expr {
-public:
-  Letin(Let *l, Expr *e): let(l), expr(e) {}
-  ~Letin() { delete let; delete expr; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Letin(" << *let << ", " << *expr << ")";
-  }
-
-private:
-  Let *let;
-  Expr *expr;
-};
-
-
-class Mytype: public BlockComponent {
-public:
-  Mytype(Tdeflist *l): tdlist(l) {}
-  ~Mytype() { delete tdlist; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Mytype(" << *tdlist << ")";
-  }
-
-private:
-  Tdeflist *tdlist;
-};
-
 
 class Block: public AST {
 public:
@@ -211,88 +158,15 @@ public:
     }
     out << ")";
   }
+  void append(BlockComponent *bb) { blist.push_back(bb); }
   
 private:
   std::vector<BlockComponent *> blist;
   int size;
 };
 
+class Type : public AST{
 
-
-class Tdeflist: public AST {
-public:
-  Tdeflist(): dlist(), size(0) {}
-  ~Tdeflist() {
-    for (Tdef *d : dlist) delete d;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Tdeflist(";
-    bool first = true;
-    for (Tdef *d : dlist) {
-      if (!first) out << ", ";
-      first = false;
-      out << *d;
-    }
-    out << ")";
-  }
-  
-private:
-  std::vector<Tdef *> dlist;
-  int size;
-};
-
-class Tdef: public AST {
-public:
-  Tdef(char *id, Constrlist *l):
-    iden(id), clist(l) {}
-  ~Tdef() { delete iden; delete clist; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Tdef(" << iden << ", " << *clist << ")"; 
-  }
-
-private:
-  char *iden;
-  Constrlist *clist;
-};
-
-class Constrlist: public AST {
-public:
-  Constrlist(): clist(), size(0) {}
-  ~Constrlist() {
-    for (Constr *c : clist) delete c;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Constrlist(";
-    bool first = true;
-    for (Constr *c : clist) {
-      if (!first) out << ", ";
-      first = false;
-      out << *c;
-    }
-    out << ")";
-  }
-  
-private:
-  std::vector<Constr *> clist;
-  int size;
-};
-
-
-class Constr: public AST {
-public:
-  Constr(char *id, Typelist *l = nullptr):
-    iden(id), tlist(l) {}
-  ~Constr() { delete iden; delete tlist; }
-  virtual void printOn(std::ostream &out) const override {
-
-    out << "Constr(" << iden;
-    if(tlist) out << ", " << *tlist;
-    out << ")"; 
-  }
-
-private:
-  char *iden;
-  Typelist *tlist;
 };
 
 class Typelist: public AST {
@@ -311,14 +185,103 @@ public:
     }
     out << ")";
   }
+  void append(Type *tt) { tlist.push_back(tt); }
   
 private:
   std::vector<Type *> tlist;
   int size;
 };
 
-class Type : public AST{
+class Constr: public AST {
+public:
+  Constr(char *id, Typelist *l = nullptr):
+    iden(id), tlist(l) {}
+  ~Constr() { delete iden; delete tlist; }
+  virtual void printOn(std::ostream &out) const override {
 
+    out << "Constr(" << iden;
+    if(tlist) out << ", " << *tlist;
+    out << ")"; 
+  }
+
+private:
+  char *iden;
+  Typelist *tlist;
+};
+
+
+class Constrlist: public AST {
+public:
+  Constrlist(): clist(), size(0) {}
+  ~Constrlist() {
+    for (Constr *c : clist) delete c;
+  }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Constrlist(";
+    bool first = true;
+    for (Constr *c : clist) {
+      if (!first) out << ", ";
+      first = false;
+      out << *c;
+    }
+    out << ")";
+  }
+  void append(Constr *cc) { clist.push_back(cc); }
+  
+private:
+  std::vector<Constr *> clist;
+  int size;
+};
+
+
+class Tdef: public AST {
+public:
+  Tdef(char *id, Constrlist *l):
+    iden(id), clist(l) {}
+  ~Tdef() { delete iden; delete clist; }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Tdef(" << iden << ", " << *clist << ")"; 
+  }
+
+private:
+  char *iden;
+  Constrlist *clist;
+};
+
+class Tdeflist: public AST {
+public:
+  Tdeflist(): dlist(), size(0) {}
+  ~Tdeflist() {
+    for (Tdef *d : dlist) delete d;
+  }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Tdeflist(";
+    bool first = true;
+    for (Tdef *d : dlist) {
+      if (!first) out << ", ";
+      first = false;
+      out << *d;
+    }
+    out << ")";
+  }
+  void append(Tdef *tt) { dlist.push_back(tt); }
+  
+private:
+  std::vector<Tdef *> dlist;
+  int size;
+};
+
+
+class Mytype: public BlockComponent {
+public:
+  Mytype(Tdeflist *l): tdlist(l) {}
+  ~Mytype() { delete tdlist; }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Mytype(" << *tdlist << ")";
+  }
+
+private:
+  Tdeflist *tdlist;
 };
 
 class Unit: public Type {
@@ -460,6 +423,7 @@ public:
     }
     out << ")";
   }
+  void append(Par *pp) { plist.push_back(pp); }
   
 private:
   std::vector<Par *> plist;
@@ -479,10 +443,10 @@ public:
     }
     else {
       out << "Def mutable(" << iden;
-      if (elist == nullptr && tp ==nullptr) out << ")";
-      if (elist == nullptr && tp !=nullptr) out << ", " << *tp << ")";
-      if (elist != nullptr && tp ==nullptr) out << ", " << *elist << ")" ;
-      else out << ", " << *tp << ", " << *elist << ")";
+      if (elist != nullptr && tp != nullptr) out << ", " << *tp << ", " << *elist << ")";
+      if (elist == nullptr && tp != nullptr) out << ", " << *tp << ")";
+      if (elist != nullptr && tp == nullptr) out << ", " << *elist << ")" ;
+      else out << ")";
     }
   }
 
@@ -510,12 +474,40 @@ public:
     }
     out << ")";
   }
+  void append(Def *dd) { dlist.push_back(dd); }
   
 private:
   std::vector<Def *> dlist;
   int size;
 };
 
+class Let: public BlockComponent {
+public:
+  Let(bool b, Deflist *l):
+    check(b), dlist(l) {}
+  ~Let() { delete dlist; }
+  virtual void printOn(std::ostream &out) const override {
+    if (check) out << "LetRec(" << *dlist << ")";
+    out << "Let(" << *dlist << ")";
+  }
+
+private:
+  bool check;
+  Deflist *dlist;
+};
+
+class Letin: public Expr {
+public:
+  Letin(Let *l, Expr *e): let(l), expr(e) {}
+  ~Letin() { delete let; delete expr; }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Letin(" << *let << ", " << *expr << ")";
+  }
+
+private:
+  Let *let;
+  Expr *expr;
+};
 
 class New: public Expr {
 public:
@@ -530,7 +522,7 @@ private:
 };
 
 
-class Valexpr: public AST {
+class Valexpr: public Expr {
 
 };
 
@@ -551,17 +543,17 @@ private:
 
 class Dim: public Expr {
 public:
-  Dim(char *id, Constint *i = nullptr): iden(id), ien(i) {}
-  ~Dim() { delete iden; delete ien; }
+  Dim(char *id, int i = -1): iden(id), ien(i) {}
+  ~Dim() { delete iden; }
   virtual void printOn(std::ostream &out) const override {
     out << "Dim" << "(" << iden;
-    if (ien != nullptr) out << ", " << *ien;
+    if (ien >= 0 ) out << ", " << ien;
     out << ")"; 
   }
 
 private:
   char *iden;
-  Constint *ien;
+  int ien;
 };
 
 
@@ -582,14 +574,14 @@ private:
 
 class Constchar: public Valexpr {
 public:
-  Constchar(char c): ch(c) {}
+  Constchar(char *c): ch(c) {}
   ~Constchar() {}
   virtual void printOn(std::ostream &out) const override { 
     out << "Constchar" << "(" << ch << ")";
   }
 
 private:
-  char ch;
+  char *ch;
 };
 
 
@@ -604,6 +596,19 @@ public:
 private:
   const char *str;
 };
+
+class BrackExp: public Valexpr {
+public:
+  BrackExp(Expr *e): exp(e) {}
+  ~BrackExp(){ delete exp; }
+  virtual void printOn(std::ostream &out) const override {
+    out << "BrackExpr( " << *exp << " )";  
+  }
+
+private:
+  Expr *exp;  
+};
+
 
 
 class Constbool: public Valexpr {
@@ -689,25 +694,54 @@ public:
     }
     out << ")";
   }
+  void append(Valexpr *vv) { velist.push_back(vv); }
   
 private:
   std::vector<Valexpr *> velist;
   int size;
 };
 
-
-class Pattern: public AST {
+class Call: public Expr {
 public:
-  Pattern(char *s, Valexprlist *l): id(s), velist(l)  {}
-  ~Pattern() { delete id; delete velist; }
-  virtual void printOn(std::ostream &out) const override { 
-    out << "Pattern" << "(" << id << ", " << *velist << ")";
+  Call(char *i, Valexprlist *l): id(i), list(l) {}
+  ~Call() { delete id; delete list; }
+  virtual void printOn(std::ostream &out) const override {
+    out << "Call" << "(" << id << ", " << *list << ")";
   }
 
 private:
-char *id;
+  char *id;
+  Valexprlist *list;
+};
+
+
+class Pattern: public AST {
+public:
+  Pattern(Valexpr *v = nullptr, char *s = nullptr, Valexprlist *l = nullptr): ve(v), id(s), velist(l)  {}
+  ~Pattern() { delete ve; delete id; delete velist; }
+  virtual void printOn(std::ostream &out) const override {
+    if(ve != nullptr) out << "PatternVal( " << *ve << " )";
+    else out << "Pattern" << "(" << id << ", " << *velist << ")";
+  }
+
+private:
+  Valexpr *ve;
+  char *id;
   Valexprlist *velist;
 };
+
+class BrackPat: public Valexpr {
+public:
+  BrackPat(Pattern *p): pat(p) {}
+  ~BrackPat(){ delete pat; }
+  virtual void printOn(std::ostream &out) const override {
+    out << "BrackPat( " << *pat << " )";  
+  }
+
+private:
+  Pattern *pat;  
+};
+
 
 
 class Clause: public AST {
@@ -740,6 +774,7 @@ public:
     }
     out << ")";
   }
+  void append(Clause *cc) { clist.push_back(cc); }
   
 private:
   std::vector<Clause *> clist;

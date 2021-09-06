@@ -90,20 +90,20 @@
 
     Block *block;
     Let *let;
-    Deflist *deflist;
+    Deflist *dlist;
     Def *def;
-    Parlist *parlist;
-    Exprlist *exprlist;
+    Parlist *pplist;
+    Exprlist *elist;
     Mytype *mytype;
-    Tdeflist *tdeflist;
+    Tdeflist *ttlist;
     Tdef *tdef;
-    Constrlist *constrlist;
+    Constrlist *cclist;
     Constr *constr;
     Typelist *typelist;
     Par *par;
     Type *type;
     Expr *expr;
-    Valexprlist *valexprlist;
+    Valexprlist *vlist;
     Valexpr *valexpr;
     Clauselist *clauselist;
     Clause *clause;
@@ -113,21 +113,21 @@
 
 %type<block> deflist
 %type<let> letdef
-%type<deflist> muldef
+%type<dlist> muldef
 %type<def> def
-%type<parlist> mulpar
-%type<exprlist> mulexpr
+%type<pplist> mulpar
+%type<elist> mulexpr
 %type<mytype> typedef
-%type<tdeflist> multdef
+%type<ttlist> multdef
 %type<tdef> tdef
-%type<constrlist> mulconstr
+%type<cclist> mulconstr
 %type<constr> constr
 %type<typelist> multype
 %type<par> par
 %type<type> type
 %type<num> muldim
 %type<expr> expr
-%type<valexprlist> mulexpr2 mulpat
+%type<vlist> mulexpr2 mulpat
 %type<valexpr> valexpr pattern1
 %type<clauselist> mulclause
 %type<clause> clause
@@ -223,8 +223,8 @@ type:
 |   "float"                                     { $$ = new Real(); }
 |   T_id                                        { $$ = new Typeid($1); }
 |   '(' type ')'                                { $$ = $2; }
-|   type "ref"                                  { $$ = Tref($1); }
-|   type "->" type                              { $$ = Tfun($1, $3); }
+|   type "ref"                                  { $$ = new Tref($1); }
+|   type "->" type                              { $$ = new Tfun($1, $3); }
 |   "array" "of" type                           { $$ = new Array($3); }
 |   "array" '[' muldim ']' "of" type            { $$ = new Array($6, $3); }
 ;
@@ -293,10 +293,10 @@ valexpr:
 |   "true"                                              { $$ = new Constbool(1); }
 |   "false"                                             { $$ = new Constbool(0); }
 |   '(' ')'                                             { $$ = new Constunit(); }
-|   '(' expr ')'                                        { $$ = $2; }
+|   '(' expr ')'                                        { $$ = new BrackExp($2); }
 |   T_id                                                { $$ = new Id(false, $1); }
-|   T_Id                                                { $$ - new Id(true, $1); }
-|   T_id '[' mulexpr ']'                                { $$ = new Arrayitem($1, $3)}
+|   T_Id                                                { $$ = new Id(true, $1); }
+|   T_id '[' mulexpr ']'                                { $$ = new Arrayitem($1, $3); }
 |   '!' valexpr                                         { $$ = new Deref($2); }
 ;
 
@@ -311,8 +311,8 @@ clause:
 ;
 
 pattern:
-    pattern1                            { $$ = $1; }                  
-|   T_Id mulpat                         { $$ = new Pattern($1, $2); }
+    pattern1                            { $$ = new Pattern($1, nullptr, nullptr); }                  
+|   T_Id mulpat                         { $$ = new Pattern(nullptr, $1, $2); }
 ;
 
 pattern1:
@@ -320,13 +320,13 @@ pattern1:
 |   '+' T_integer %prec UNOP            { $$ = new Constint($2, false); }
 |   '-' T_integer %prec UNOP            { $$ = new Constint($2, true); }
 |   T_real                              { $$ = new Constreal($1, false); }
-|   "+." T_real   %prec UNOP            { $$ = new Constreal($1, false); }
-|   "-." T_real   %prec UNOP            { $$ = new Constreal($1, true); }
+|   "+." T_real   %prec UNOP            { $$ = new Constreal($2, false); }
+|   "-." T_real   %prec UNOP            { $$ = new Constreal($2, true); }
 |   T_character                         { $$ = new Constchar($1); }
 |   "true"                              { $$ = new Constbool(1); }
 |   "false"                             { $$ = new Constbool(0); }
 |   T_id                                { $$ = new Id(false, $1); }
-|   '(' pattern ')'                     { $$ = $2; }
+|   '(' pattern ')'                     { $$ = new BrackPat($2); }
 |   T_Id                                { $$ = new Id(true, $1); }
 ;
 
