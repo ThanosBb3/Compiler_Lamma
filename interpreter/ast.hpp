@@ -3,6 +3,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include "AST_main.hpp"
+#include "type.hpp"
 
 class AST {
 public:
@@ -165,9 +167,6 @@ private:
   int size;
 };
 
-class Type : public AST{
-
-};
 
 class Typelist: public AST {
 public:
