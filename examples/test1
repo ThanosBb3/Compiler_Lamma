@@ -1,10 +1,9 @@
--> +. -. *. /. ** == := != <> <= >= && || '\n'
--- ajkfgkjashkfjgaskjhfkas
-aaaaaaa
-(*
-dafasfsafsa
-afas
-sfasfaasfsa
-*)
-
-$
+let main =
+let reverse s r =
+let l = s in
+for i = 0 to l-1 do
+r[i] := !s[l-i-1]
+done;
+r[l] := '\0' in
+let mutable p [20] in
+reverse "\n!dlrow olleH" p
