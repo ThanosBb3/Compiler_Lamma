@@ -8,6 +8,10 @@ class Type : public AST{
 
 };
 
+inline std::ostream& operator<< (std::ostream &out, const AST &t) {
+  t.printOn(out);
+  return out;
+}
 
 class Unit: public Type {
 public:
