@@ -1,3 +1,0 @@
-let d e (a : unit) = (if () then (delete 42.0) else dim 2 foo)
-and mutable d
-

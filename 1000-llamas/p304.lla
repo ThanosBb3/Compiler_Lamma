@@ -1,6 +1,0 @@
-type main = D | B | Cons | Nil
-
-type a = D | Nil | B | D
-
-let mutable b
-

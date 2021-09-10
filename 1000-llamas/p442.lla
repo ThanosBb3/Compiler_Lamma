@@ -1,7 +1,0 @@
-type foo = Cons | Empty | C
- and a = Tree | B | Cons of int char float | A of char
-
-type b = Nil | D of float -> c
-
-type c = A | Nil
-

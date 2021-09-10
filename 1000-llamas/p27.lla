@@ -1,2 +1,0 @@
-let bar c : char ref = delete (a (begin dim a end) (new array [*,*] of float ref))
-

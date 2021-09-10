@@ -1,6 +1,0 @@
-type g = Empty
-
-type a = Cons | Tree | Nil | Empty
-
-type a = C
-

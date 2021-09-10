@@ -1,7 +1,0 @@
-type d = B | Tree
- and main = A | Empty of char c ref | Tree of char c unit float
-
-type g = Tree | D | Cons
-
-type b = B
-

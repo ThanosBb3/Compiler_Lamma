@@ -1,2 +1,0 @@
-let rec a (g : float) = for foo = true to 2.56 do main[()] done
-

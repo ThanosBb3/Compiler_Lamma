@@ -1,3 +1,0 @@
-let foo foo g = -. (begin ! (begin "Route66" end) end)
-and a bar g (main : unit) (c : array [*,*] of char) = dim a
-

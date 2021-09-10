@@ -1,5 +1,0 @@
-let g a b = a[match if "foo" then 5 else "bar" with
-  true -> a['a',false]
-end
-,(+. (g false 40 40))]
-

@@ -1,6 +1,0 @@
-let f : unit = d
-
-type bar = B | C
-
-type c = B | Tree
-
