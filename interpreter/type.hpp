@@ -10,7 +10,7 @@ class Type : public AST{
     virtual void printOn(std::ostream &out) const override {
     out << "Type()";
   }
-    virtual bool operator==(const OurType &that) const { return false; }
+    virtual bool operator==(const Type &that) const { return false; }
 
     Types val;
     Type *oftype;
@@ -100,7 +100,7 @@ public:
   Tfun(Type *l, Type *r) { val = TYPE_Tfun; tleft = l; tright = r; oftype = nullptr; size = -1;}
   ~Tfun() { delete tleft; delete tright; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Tfun (" << tleft->printOn(out) << " -> " << tright->printOn(out) <<")";
+    out << "Tfun ("; tleft->printOn(out); out << " -> "; tright->printOn(out); out <<")";
   }
 private:
   Type *tleft;
