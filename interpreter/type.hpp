@@ -3,9 +3,18 @@
 #include <iostream>
 #include "AST_main.hpp"
 
+enum Types { TYPE_Unit, TYPE_Integer, TYPE_Boolean, TYPE_Real, TYPE_Array, TYPE_Char, TYPE_Tref, TYPE_Tfun, TYPE_Tid };
 
 class Type : public AST{
+  public:
+    virtual void printOn(std::ostream &out) const override {
+    out << "Type()";
+  }
+    virtual bool operator==(const OurType &that) const { return false; }
 
+    Types val;
+    Type *oftype;
+    int size;
 };
 
 inline std::ostream& operator<< (std::ostream &out, const AST &t) {
@@ -15,7 +24,10 @@ inline std::ostream& operator<< (std::ostream &out, const AST &t) {
 
 class Unit: public Type {
 public:
-  Unit(){}
+  Unit(){    
+    val = TYPE_Unit;
+    oftype = nullptr;
+    size = -1;}
   virtual void printOn(std::ostream &out) const override {
     out << "Unit()";
   }
@@ -24,7 +36,10 @@ public:
 
 class Integer: public Type {
 public:
-  Integer(){}
+  Integer(){    
+    val = TYPE_Integer;
+    oftype = nullptr;
+    size = -1;}
   virtual void printOn(std::ostream &out) const override {
     out << "Integer()";
   }
@@ -33,7 +48,10 @@ public:
 
 class Char: public Type {
 public:
-  Char(){}
+  Char(){    
+    val = TYPE_Char;
+    oftype = nullptr;
+    size = -1;}
   virtual void printOn(std::ostream &out) const override {
     out << "Char()";
   }
@@ -42,7 +60,10 @@ public:
 
 class Boolean: public Type {
 public:
-  Boolean(){}
+  Boolean(){    
+    val = TYPE_Boolean;
+    oftype = nullptr;
+    size = -1;}
   virtual void printOn(std::ostream &out) const override {
     out << "Boolean()";
   }
@@ -51,7 +72,10 @@ public:
 
 class Real: public Type {
 public:
-  Real(){}
+  Real(){    
+    val = TYPE_Real;
+    oftype = nullptr;
+    size = -1;}
   virtual void printOn(std::ostream &out) const override {
     out << "Real()";
   }
@@ -61,60 +85,54 @@ public:
 
 class Typeid: public Type {
 public:
-  Typeid(char *i):
-    iden(i) {}
-  ~Typeid() { delete iden; }
+  Typeid(char *i) { val = TYPE_Tid; oftype = nullptr; size = -1; id = i;}
+  ~Typeid() { delete id; }
   virtual void printOn(std::ostream &out) const override {
-    out << "id (" << iden << ")";
+    out << "Typeid (" << id << ")";
   }
-
 private:
-  char *iden;
-
+  char *id;
 };
 
 class Tfun: public Type {
 public:
-  Tfun(Type *l, Type *r):
-    tleft(l), tright(r) {}
+  Tfun(Type *l, Type *r) { val = TYPE_Tfun; tleft = l; tright = r; oftype = nullptr; size = -1;}
   ~Tfun() { delete tleft; delete tright; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Tfun (" << *tleft << " -> " << *tright <<")";
+    out << "Tfun (" << tleft->printOn(out) << " -> " << tright->printOn(out) <<")";
   }
-
 private:
   Type *tleft;
   Type *tright;
-
 };
 
 class Tref: public Type {
 public:
-  Tref(Type *t):
-    tp(t) {}
-  ~Tref() { delete tp; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Tref (" << *tp << ")";
+  Tref(Type *t) {
+    val = TYPE_Tref;
+    oftype = t;
+    size = -1;
   }
-
-private:
-  Type *tp;
+  virtual void printOn(std::ostream &out) const override {
+    out << "Tref (";
+    oftype->printOn(out); 
+    out << ")";
+  }
 
 };
 
 class Array: public Type {
 public:
-  Array(Type *t, int dims = -1):
-    tp(t), size(dims) {}
-  ~Array() { delete tp; }
+  Array(Type *t, int dims = -1) {
+    val = TYPE_Array;
+    if(dims>0) size = dims;
+    else size = -1;
+    oftype = t;
+  }
   virtual void printOn(std::ostream &out) const override {
-    out << "Array (Type: " << *tp;
+    out << "Array (Type: "; oftype->printOn(out);
     if(size>=0) out << " and size " << size;
     out << " )";
   }
-
-private:
-  Type *tp;
-  int size;
 
 };
