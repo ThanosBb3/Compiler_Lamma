@@ -68,6 +68,7 @@ public:
     out << "Boolean()";
   }
 
+
 };
 
 class Real: public Type {
