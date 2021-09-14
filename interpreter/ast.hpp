@@ -8,6 +8,13 @@
 
 class Expr: public AST {
 public:
+  bool type_check(Types t) {
+    if (type->val == t) return true;
+    else return false;
+  }
+
+protected:
+  Type *type  
 };
 
 class Exprlist: public AST {
@@ -28,6 +35,10 @@ public:
   }
   void append(Expr *ee) { elist.push_back(ee); }
   
+  virtual void sem() override{
+    for (Expr *e : elist) e->sem();
+  }
+  
 private:
   std::vector<Expr *> elist;
   int size;
@@ -40,6 +51,77 @@ public:
   virtual void printOn(std::ostream &out) const override {
     out << op << "(" << *left << ", " << *right << ")";
   }
+
+  virtual void sem() override {
+    left->sem();
+    right->sem();
+
+    if(! strcmp(op, "+") || ! strcmp(op, "-") || ! strcmp(op, "*") || ! strcmp(op, "/") || ! strcmp(op, "mod")) {
+      if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer);) {
+        type = new Integer();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, "+.") || ! strcmp(op, "-.") || ! strcmp(op, "*.") || ! strcmp(op, "/.") || ! strcmp(op, "**")) {
+      if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real);) {
+        type = new Real();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, "=") || ! strcmp(op, "<>") || ! strcmp(op, "==") || ! strcmp(op, "!=")) {
+      if(!(left->type_check(TYPE_Array)) && !(left->type_check(TYPE_Tfun)) && (left->type->val == right->type->val)) {
+        type = new Boolean();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, "<") || ! strcmp(op, ">") || ! strcmp(op, "<=") || ! strcmp(op, ">=")) {
+      if((left->type_check(TYPE_Integer) || left->type_check(TYPE_Real) || left->type_check(TYPE_Char)) && (left->type->val == right->type->val)) {
+        type = new Boolean();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, "&&") || ! strcmp(op, "||")) {
+      if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+        type = new Boolean();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, ":=")) {
+      if(left->type_check(TYPE_Tref) && (right->type->val == left->type->oftype->val)) {
+        type = new Unit();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    // na testarw oti oi typoi sto ; einai egkyroi
+    else if(! strcmp(op, ";")) {
+      type = right->type;
+    }
+  }
+
 
 private:
   Expr *left;
@@ -54,6 +136,40 @@ public:
   ~Unop() { delete right; }
   virtual void printOn(std::ostream &out) const override {
     out << op << "(" << *right << ")";
+  }
+
+  virtual void sem() override {
+    right->sem()
+
+    if(! strcmp(op, "+") || ! strcmp(op, "-")) {
+      if(right->type_check(TYPE_Integer);) {
+        type = new Integer();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, "+.") || ! strcmp(op, "-.")) {
+      if(right->type_check(TYPE_Real);) {
+        type = new Real();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+
+    else if(! strcmp(op, "not")) {
+      if(right->type_check(TYPE_Boolean);) {
+        type = new Boolean();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
   }
 
 private:
