@@ -91,6 +91,13 @@ public:
   virtual void printOn(std::ostream &out) const override {
     out << "Typeid (" << id << ")";
   }
+  virtual void sem() override {
+    if(st.lookup(id)==nullptr){
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
+  }
+
 private:
   char *id;
 };

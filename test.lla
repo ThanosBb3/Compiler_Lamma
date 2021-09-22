@@ -1,8 +1,15 @@
-let rec bar d foo f = dim 1 bar
-and f c e foo = (for main = () downto "bar" do '\n' done /. (dim 1 main))
-and mutable a
-and c (c : char) (bar : (char) ref) = for f = 42.0 downto 2.56 do main["bar",42.0] done
-and mutable f[new float] : char ref
+let main = 
+    let reverse s r =
+        let l = strlen s in
+        for i = 0 to l-1 do
+            r[i] := !s[l-i-1]
+        done;
+        r[l] := '\0' in
+
+    let mutable p [20] in
+
+    reverse "\n!dlrow olleH" p
+        
 
 
 

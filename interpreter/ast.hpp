@@ -57,7 +57,7 @@ public:
     right->sem();
 
     if(! strcmp(op, "+") || ! strcmp(op, "-") || ! strcmp(op, "*") || ! strcmp(op, "/") || ! strcmp(op, "mod")) {
-      if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer);) {
+      if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
         type = new Integer();
       }
       else {
@@ -67,7 +67,7 @@ public:
     }
 
     else if(! strcmp(op, "+.") || ! strcmp(op, "-.") || ! strcmp(op, "*.") || ! strcmp(op, "/.") || ! strcmp(op, "**")) {
-      if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real);) {
+      if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
         type = new Real();
       }
       else {
@@ -139,10 +139,10 @@ public:
   }
 
   virtual void sem() override {
-    right->sem()
+    right->sem();
 
     if(! strcmp(op, "+") || ! strcmp(op, "-")) {
-      if(right->type_check(TYPE_Integer);) {
+      if(right->type_check(TYPE_Integer)) {
         type = new Integer();
       }
       else {
@@ -152,7 +152,7 @@ public:
     }
 
     else if(! strcmp(op, "+.") || ! strcmp(op, "-.")) {
-      if(right->type_check(TYPE_Real);) {
+      if(right->type_check(TYPE_Real)) {
         type = new Real();
       }
       else {
@@ -162,7 +162,7 @@ public:
     }
 
     else if(! strcmp(op, "not")) {
-      if(right->type_check(TYPE_Boolean);) {
+      if(right->type_check(TYPE_Boolean)) {
         type = new Boolean();
       }
       else {
@@ -186,6 +186,18 @@ public:
     out << "Delete" << "(" << *exp << ")"; 
   }
 
+  virtual void sem() override {
+    exp->sem();
+
+    if (exp->type_check(TYPE_Tref)) {
+      type = new Unit();
+    }
+    else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+    }
+  }
+
 private:
   Expr *exp;
 };
@@ -200,6 +212,32 @@ public:
     out << "If(" << *cond << ", " << *stmt1;
     if (stmt2 != nullptr) out << ", " << *stmt2;
     out << ")";
+  }
+
+  virtual void sem() override {
+    cond->sem();
+
+    if (cond->type_check(TYPE_Boolean)) {
+      
+      stmt1->sem();
+      if (stmt2 != nullptr) {
+        stmt2->sem();
+        if (stmt1->type->val != stmt2->type->val) {
+          fprintf(stderr, "Error: %s\n", "Type Mismatch between then and else statements!!!");
+          exit(1);
+        }
+        else {
+          type = stmt1->type;
+        }
+      }
+      else {
+        type = stmt1->type;
+      }
+    }
+    else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+    }
   }
 
 private:
@@ -218,6 +256,25 @@ public:
     out << "While(" << *cond << ", " << *stmt1 << ")";
   }
 
+  virtual void sem() override {
+    cond->sem();
+
+    if (cond->type_check(TYPE_Boolean)) {
+      stmt1->sem();
+      if (stmt1->type_check(TYPE_Unit)) {
+        type = new Unit();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+    else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+    }
+  }
+
 private:
   Expr *cond;
   Expr *stmt1;
@@ -232,6 +289,30 @@ public:
   virtual void printOn(std::ostream &out) const override {
     if (check) out << "ForDown(" << iden << ", " << *cond << ", " << *stmt1 << ", " << *stmt2 << ")";
     out << "For(" << iden << ", " << *cond << ", " << *stmt1 << ", " << *stmt2 << ")";
+  }
+
+  virtual void sem() override {
+    st.openScope();
+    st.insert(iden, new Integer());
+
+    cond->sem();
+    stmt1->sem();
+    if (cond->type_check(TYPE_Integer) && stmt1->type_check(TYPE_Integer)) {
+      stmt2->sem();
+      if (stmt2->type_check(TYPE_Unit)) {
+        type = new Unit();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+      }
+    }
+    else {
+        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        exit(1);
+    }
+
+    st.closeScope();
   }
 
 private:
@@ -267,6 +348,10 @@ public:
   }
   void append(BlockComponent *bb) { blist.push_back(bb); }
   
+  virtual void sem() override{
+    for (BlockComponent *b : blist) b->sem();
+  }
+
 private:
   std::vector<BlockComponent *> blist;
   int size;
@@ -291,6 +376,10 @@ public:
   }
   void append(Type *tt) { tlist.push_back(tt); }
   
+  virtual void sem() override{
+    for (Type *t : tlist) t->sem();
+  }
+
 private:
   std::vector<Type *> tlist;
   int size;
@@ -306,6 +395,18 @@ public:
     out << "Constr(" << iden;
     if(tlist) out << ", " << *tlist;
     out << ")"; 
+  }
+
+  virtual void sem() override {
+    if(st.lookup(iden)!=nullptr){
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
+    else{
+      // na thimithw na valw typo sto insert
+      st.insert(iden,);
+      tlist->sem();
+    }
   }
 
 private:
@@ -332,6 +433,10 @@ public:
   }
   void append(Constr *cc) { clist.push_back(cc); }
   
+  virtual void sem() override{
+    for (Constr *c : clist) c->sem();
+  }
+
 private:
   std::vector<Constr *> clist;
   int size;
@@ -345,6 +450,18 @@ public:
   ~Tdef() { delete iden; delete clist; }
   virtual void printOn(std::ostream &out) const override {
     out << "Tdef(" << iden << ", " << *clist << ")"; 
+  }
+
+  virtual void sem() override {
+    if(st.lookup(iden)!=nullptr){
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
+    else{
+      // na thimithw na valw typo sto insert
+      st.insert(iden,);
+      clist->sem();
+    }
   }
 
 private:
@@ -370,6 +487,10 @@ public:
   }
   void append(Tdef *tt) { dlist.push_back(tt); }
   
+  virtual void sem() override{
+    for (Tdef *d : dlist) d->sem();
+  }
+
 private:
   std::vector<Tdef *> dlist;
   int size;
@@ -382,6 +503,10 @@ public:
   ~Mytype() { delete tdlist; }
   virtual void printOn(std::ostream &out) const override {
     out << "Mytype(" << *tdlist << ")";
+  }
+
+  virtual void sem() override {
+    tdlist->sem();
   }
 
 private:
@@ -397,6 +522,11 @@ public:
     out << "Parameter(" << iden;
     if(tp != nullptr) out << " of type " << *tp;
     out << " )"; 
+  }
+
+  virtual void sem() override {
+    st.insert(iden);
+    // na dv toys typoys
   }
 
 private:
@@ -423,6 +553,10 @@ public:
   }
   void append(Par *pp) { plist.push_back(pp); }
   
+  virtual void sem() override{
+    for (Par *p : plist) p->sem();
+  }
+
 private:
   std::vector<Par *> plist;
   int size;
@@ -489,6 +623,11 @@ public:
     out << "Let(" << *dlist << ")";
   }
 
+  virtual void sem() override{
+    st.openScope();
+    for (Deflist *d : dlist) d->sem();
+  }
+
 private:
   bool check;
   Deflist *dlist;
@@ -502,6 +641,14 @@ public:
     out << "Letin(" << *let << ", " << *expr << ")";
   }
 
+  virtual void sem() {
+    let->sem();
+    expr->sem();
+    type = expr->type;
+    st.closeScope();
+  }
+
+
 private:
   Let *let;
   Expr *expr;
@@ -509,14 +656,25 @@ private:
 
 class New: public Expr {
 public:
-  New(Type *t): type(t) {}
-  ~New() { delete type; }
+  New(Type *t): tp1(t) {}
+  ~New() { delete tp1; }
   virtual void printOn(std::ostream &out) const override {
-    out << "New" << "(" << *type << ")"; 
+    out << "New" << "(" << *tp1 << ")"; 
+  }
+
+  virtual void sem() {
+    tp1->sem();
+    if(tp1->val!=TYPE_Array){
+      type = new TYPE_Tref(tp1);
+    }
+    else{
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
   }
 
 private:
-  Type *type;
+  Type *tp1;
 };
 
 
@@ -534,6 +692,10 @@ public:
     out << "Constint" << "(" << ien << ")";
   }
 
+  virtual void sem() override {
+    type = new Integer();
+  }
+
 private:
   int ien;
   bool check;
@@ -547,6 +709,17 @@ public:
     out << "Dim" << "(" << iden;
     if (ien >= 0 ) out << ", " << ien;
     out << ")"; 
+  }
+
+  virtual void sem() override{
+    if(st.lookup(iden)!=nullptr){
+      type = new Integer();
+    }
+    else{
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
+    
   }
 
 private:
@@ -564,6 +737,10 @@ public:
     out << "Constreal" << "(" << ien << ")";
   }
 
+  virtual void sem() override {
+    type = new Real();
+  }
+
 private:
   float ien;
   bool check;
@@ -578,6 +755,10 @@ public:
     out << "Constchar" << "(" << ch << ")";
   }
 
+  virtual void sem() override {
+    type = new Char();
+  }
+
 private:
   char *ch;
 };
@@ -589,6 +770,10 @@ public:
   ~Conststr() { delete str; }
   virtual void printOn(std::ostream &out) const override { 
     out << "Conststr" << "(" << str << ")";
+  }
+
+  virtual void sem() override {
+    type = new Array(new Char(), strlen(c)-1);
   }
 
 private:
@@ -617,6 +802,10 @@ public:
     out << "Constbool" << "(" << ien << ")";
   }
 
+  virtual void sem() override {
+    type = new Boolean();
+  }
+
 private:
   int ien;
 };
@@ -630,6 +819,10 @@ public:
     out << "Constunit" << "(" << ")";
   }
 
+  virtual void sem() override {
+    type = new Unit();
+  }
+
 };
 
 
@@ -640,6 +833,13 @@ public:
   virtual void printOn(std::ostream &out) const override { 
     if (check) out << "ConstrId" << "(" << name << ")";
     out << "Id" << "(" << name << ")";
+  }
+
+  virtual void sem() override {
+    if(st.lookup(name)==nullptr){
+      st.insert(name);
+    }
+    // na dw typous
   }
 
 private:
