@@ -35,44 +35,44 @@ extern std::unordered_map<char*, SymbolEntry*> globals;
 
 class SymVariable: public SymbolEntry {
   public:
-    SymVariable(SymbolEntry *n, Type t) {
+    SymVariable(SymbolEntry *n, Type* t) {
       entry_type = ENTRY_VARIABLE;
       next = n; 
       type = t;
     }
 
   private:
-    Type type;
+    Type* type;
 };
 
 class SymConstant: public SymbolEntry {
   public:
-    SymConstant(SymbolEntry *n, Type t) {
+    SymConstant(SymbolEntry *n, Type* t) {
       entry_type = ENTRY_CONSTANT;
       next = n; 
       type = t;
     }
 
   private:
-    Type type;
+    Type* type;
 };
 
 class SymType: public SymbolEntry {
   public:
-    SymType(SymbolEntry *n, Type t) {
+    SymType(SymbolEntry *n, Type* t) {
       entry_type = ENTRY_TYPE;
       next = n; 
       type = t;
     }
 
   private:
-    Type type;
+    Type* type;
   
 };
 
 class SymFunction: public SymbolEntry {
   public:
-    SymFunction(SymbolEntry *n, std::vector<Type> vt, Type t) {
+    SymFunction(SymbolEntry *n, std::vector<Type*> vt, Type* t) {
       entry_type = ENTRY_FUNCTION;
       next = n;
       par_type = vt;
@@ -80,25 +80,25 @@ class SymFunction: public SymbolEntry {
     }
 
   private:
-    std::vector<Type> par_type;
-    Type res_type;
+    std::vector<Type*> par_type;
+    Type* res_type;
 };
 
 class SymIdentifier: public SymbolEntry {
   public:
-    SymIdentifier(SymbolEntry *n, Type t) {
+    SymIdentifier(SymbolEntry *n, Type* t) {
       entry_type = ENTRY_IDENTIFIER;
       next = n; 
       type = t;
     }
 
   private:
-    Type type;
+    Type* type;
 };
 
 class SymConstructor: public SymbolEntry {
   public:
-    SymConstructor(SymbolEntry *n, std::vector<Type> vt, Type t) {
+    SymConstructor(SymbolEntry *n, std::vector<Type*> vt, Type* t) {
       entry_type = ENTRY_CONSTRUCTOR;
       next = n;
       par_type = vt;
@@ -106,20 +106,20 @@ class SymConstructor: public SymbolEntry {
     }
 
   private:
-    std::vector<Type> par_type;
-    Type res_type;
+    std::vector<Type*> par_type;
+    Type* res_type;
 };
 
 class SymParameter: public SymbolEntry {
   public:
-    SymParameter(SymbolEntry *n, Type t) {
+    SymParameter(SymbolEntry *n, Type* t) {
       entry_type = ENTRY_PARAMETER;
       next = n; 
       type = t;
     }
 
   private:
-    Type type;
+    Type* type;
 };
 
 class Scope {
@@ -127,7 +127,7 @@ public:
   std::unordered_map<char*, SymbolEntry*> locals;  // Hash-map matching variable names to SymbolEntries
 
   Scope() {}  // Initializer: hash map locals is empty
-  SymbolEntry *insert(char* c, Type t, SymbolEntry *n, Entry_Type etype) {
+  SymbolEntry *insert(char* c, Type* t, SymbolEntry *n, Entry_Type etype) {
     if (locals.find(c) != locals.end()) {  
       std::cerr << ("Duplicate entry " + std::string(c) + " in this scope!!!") << std::endl;  // Print error message
       exit(1);
@@ -154,7 +154,7 @@ public:
     }
     return (locals[c]);  // Return pointer to the new entry
   }
-  SymbolEntry *insert(char* c, Type rt, SymbolEntry *n, Entry_Type etype, std::vector<Type> vt) {
+  SymbolEntry *insert(char* c, Type* rt, SymbolEntry *n, Entry_Type etype, std::vector<Type*> vt) {
     if (locals.find(c) != locals.end()) {  
       std::cerr << ("Duplicate entry " + std::string(c) + " in this scope!!!") << std::endl;  // Print error message
       exit(1);
@@ -197,13 +197,13 @@ public:
     }
     return globals[c];  // If entry exists return pointer to its SymbolEntry
   }
-  void insert(char* c, Type t, Entry_Type etype) {
+  void insert(char* c, Type* t, Entry_Type etype) {
     SymbolEntry *n;  // Pointer to next variable with the same name
     if (globals.find(c) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr
     else n = globals[c];  // else point to it
     globals[c] = scopes.back()->insert(c, t, n, etype); // Insert SymbolEntry to top Scope
   }
-  void insert(char* c, Type t, Entry_Type etype ,std::vector<Type> vt) {
+  void insert(char* c, Type* t, Entry_Type etype ,std::vector<Type*> vt) {
     SymbolEntry *n;  // Pointer to next variable with the same name
     if (globals.find(c) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr
     else n = globals[c];  // else point to it

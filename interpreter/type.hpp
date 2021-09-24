@@ -3,7 +3,7 @@
 #include <iostream>
 #include "AST_main.hpp"
 
-enum Types { TYPE_Unit, TYPE_Integer, TYPE_Boolean, TYPE_Real, TYPE_Array, TYPE_Char, TYPE_Tref, TYPE_Tfun, TYPE_Tid };
+enum Types { TYPE_Unit, TYPE_Integer, TYPE_Boolean, TYPE_Real, TYPE_Array, TYPE_Char, TYPE_Tref, TYPE_Tfun, TYPE_Tid , TYPE_Unknown};
 
 class Type : public AST{
   public:
@@ -141,6 +141,19 @@ public:
     out << "Array (Type: "; oftype->printOn(out);
     if(size>=0) out << " and size " << size;
     out << " )";
+  }
+
+};
+
+class Tunknown: public Type {
+public:
+  Tunknown() {
+    val = TYPE_Unknown;
+    oftype = nullptr;
+    size = -1;
+  }
+  virtual void printOn(std::ostream &out) const override {
+    out << "T_unknown";
   }
 
 };
