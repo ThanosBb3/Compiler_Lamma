@@ -2,6 +2,9 @@
 
 #include <iostream>
 #include "AST_main.hpp"
+#include "symbol.hpp"
+
+SymbolTable st;
 
 enum Types { TYPE_Unit, TYPE_Integer, TYPE_Boolean, TYPE_Real, TYPE_Array, TYPE_Char, TYPE_Tref, TYPE_Tfun, TYPE_Tid , TYPE_Unknown};
 
@@ -11,6 +14,8 @@ class Type : public AST{
     out << "Type()";
   }
     virtual bool operator==(const Type &that) const { return false; }
+
+    virtual char* getID() {}
 
     Types val;
     Type *oftype;
@@ -96,6 +101,10 @@ public:
       fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
       exit(1);
     }
+  }
+
+  char* getID() override {
+    return id;
   }
 
 private:

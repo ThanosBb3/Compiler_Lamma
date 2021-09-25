@@ -55,6 +55,10 @@ public:
   int getSize() {
     return size;
   }
+
+  std::vector<Expr *> getExps() {
+    return elist;
+  }
   
 private:
   std::vector<Expr *> elist;
@@ -755,9 +759,9 @@ public:
   }
 
   virtual void sem() {
-    tp1->sem();
     if(tp1->val!=TYPE_Array){
-      type = new TYPE_Tref(tp1);
+      tp1->sem();
+      type = new Tref(tp1);
     }
     else{
       fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
@@ -788,6 +792,10 @@ public:
     type = new Integer();
   }
 
+  virtual void sem(Type* t) override {
+    type = new Integer();
+  }
+
 private:
   int ien;
   bool check;
@@ -804,8 +812,16 @@ public:
   }
 
   virtual void sem() override{
-    if(st.lookup(iden)!=nullptr){
+    SymbolEntry* arr;
+    arr = st.lookup(iden);
+    if(arr!=nullptr && arr->getEType()==ENTRY_VARIABLE && arr->getType()->val==TYPE_Array){
+      if(ien>=1 && ien<=arr->getType()->size) {
       type = new Integer();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Not valid array dimension for return!!!");
+        exit(1);
+      }
     }
     else{
       fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
@@ -833,6 +849,10 @@ public:
     type = new Real();
   }
 
+  virtual void sem(Type* t) override {
+    type = new Real();
+  }
+
 private:
   float ien;
   bool check;
@@ -851,6 +871,10 @@ public:
     type = new Char();
   }
 
+  virtual void sem(Type* t) override {
+    type = new Char();
+  }
+
 private:
   char *ch;
 };
@@ -865,7 +889,7 @@ public:
   }
 
   virtual void sem() override {
-    type = new Array(new Char(), strlen(c)-1);
+    type = new Array(new Char(), strlen(str)-1);
   }
 
 private:
@@ -878,6 +902,11 @@ public:
   ~BrackExp(){ delete exp; }
   virtual void printOn(std::ostream &out) const override {
     out << "BrackExpr( " << *exp << " )";  
+  }
+
+  virtual void sem() override {
+    exp->sem();
+    type = exp->getType();
   }
 
 private:
@@ -895,6 +924,10 @@ public:
   }
 
   virtual void sem() override {
+    type = new Boolean();
+  }
+
+  virtual void sem(Type* t) override {
     type = new Boolean();
   }
 
@@ -928,10 +961,20 @@ public:
   }
 
   virtual void sem() override {
-    if(st.lookup(name)==nullptr){
-      st.insert(name);
+    SymbolEntry* idd;
+    idd = st.lookup(name);
+    if(idd!=nullptr){
+      type = idd->getType();  
     }
-    // na dw typous
+    else{
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
+  }
+
+  virtual void sem(Type* t) override {
+    st.insert(name, t, ENTRY_CONSTANT);
+    type = t;
   }
 
 private:
@@ -948,6 +991,26 @@ public:
     out << "Arrayitem" << "(" << id << ", " << *elist << ")";
   }
 
+  virtual void sem() override{
+    SymbolEntry* arr;
+    arr = st.lookup(id);
+    if(arr!=nullptr && arr->getEType()==ENTRY_VARIABLE && arr->getType()->val==TYPE_Array){
+      elist->sem();
+      for (Expr *e : elist->getExps()) {
+        if(e->getType()->val!=TYPE_Integer) {
+          fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+          exit(1);
+        }
+      }
+      type = new Tref(arr->getType());
+      }
+    else {
+      fprintf(stderr, "Error: %s\n", "Not array!!!");
+      exit(1);
+    }
+    
+  }
+
 private:
   char *id;
   Exprlist *elist;
@@ -961,6 +1024,17 @@ public:
   virtual void printOn(std::ostream &out) const override { 
     out << "Deref" << "(" << *vexp << ")";
   }
+
+  virtual void sem() override {
+    vexp->sem();
+    if(vexp->getType()->val==TYPE_Tref) {
+      type = vexp->getType()->oftype;
+    }
+    else{
+      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      exit(1);
+    }
+}
 
 private:
   Valexpr *vexp;
@@ -985,6 +1059,14 @@ public:
     out << ")";
   }
   void append(Valexpr *vv) { velist.push_back(vv); }
+
+  virtual void sem() override{
+    for (Valexpr *v : velist) v->sem();
+  }
+
+  std::vector<Valexpr *> getVexps() {
+    return velist;
+  }
   
 private:
   std::vector<Valexpr *> velist;
@@ -997,6 +1079,38 @@ public:
   ~Call() { delete id; delete list; }
   virtual void printOn(std::ostream &out) const override {
     out << "Call" << "(" << id << ", " << *list << ")";
+  }
+
+  virtual void sem() override {
+    SymbolEntry* idd;
+    idd = st.lookup(id);
+    if(idd!=nullptr && (idd->getEType()==ENTRY_FUNCTION || idd->getEType()==ENTRY_CONSTRUCTOR)){
+      list->sem();
+      std::vector<Valexpr*> ves;
+      std::vector<Type*> vtypes;
+      std::vector<Type*> argtypes;
+      vtypes = idd->getVector();
+      ves = list->getVexps();
+      for (Valexpr *v: ves) {
+        argtypes.push_back(v->getType());
+      }
+      if(vtypes.size()!=argtypes.size()){
+        fprintf(stderr, "Error: %s\n", "Unequal sizes!!!");
+        exit(1);
+      }
+      for (int i=0; i<argtypes.size(); i++) {
+        if(vtypes[i]->val!=argtypes[i]->val){
+          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          exit(1);
+        }
+      }
+      type = idd->getType();
+
+    }
+    else {
+      fprintf(stderr, "Error: %s\n", "Not function or constructor!!!");
+      exit(1);
+    }
   }
 
 private:
@@ -1014,6 +1128,75 @@ public:
     else out << "Pattern" << "(" << id << ", " << *velist << ")";
   }
 
+  virtual void sem(Type* t) override {
+    if(id!=nullptr) {
+      ve->sem(t);
+      switch(ve->getVal()) {
+        case(TYPE_Integer):
+          if(t->val!=TYPE_Integer){
+            fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+            exit(1);
+          }
+          break;
+
+        case(TYPE_Real):
+           if(t->val!=TYPE_Real){
+            fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+            exit(1);
+          }
+          break;
+
+        case(TYPE_Char):
+          if(t->val!=TYPE_Char){
+            fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+            exit(1);
+          }
+          break;
+
+        case(TYPE_Boolean):
+          if(t->val!=TYPE_Boolean){
+          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          exit(1);
+          }
+          break;
+
+        default:
+          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          exit(1);
+      }
+    }
+
+    else {
+      SymbolEntry* con;
+      con = st.lookup(id);
+      if(con!=nullptr && con->getType()->val==t->val) {
+        std::vector<Type*> vtypes;
+        vtypes = con->getVector();
+        velist->sem();
+        std::vector<Valexpr*> ves;
+        std::vector<Type*> argtypes;
+        ves = velist->getVexps();
+        for (Valexpr *v: ves) {
+          argtypes.push_back(v->getType());
+        }
+        if(vtypes.size()!=argtypes.size()){
+        fprintf(stderr, "Error: %s\n", "Unequal sizes!!!");
+        exit(1);
+      }
+      for (int i=0; i<argtypes.size(); i++) {
+        if(vtypes[i]->val!=argtypes[i]->val){
+          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          exit(1);
+        }
+      }
+      }
+    }
+  }
+
+  Type* gett() {
+    return ve->getType();
+  }
+
 private:
   Valexpr *ve;
   char *id;
@@ -1028,6 +1211,11 @@ public:
     out << "BrackPat( " << *pat << " )";  
   }
 
+  virtual void sem(Type* t) {
+    pat->sem(t);
+    type = pat->gett();
+  }
+
 private:
   Pattern *pat;  
 };
@@ -1040,6 +1228,17 @@ public:
   ~Clause() { delete pat; delete exp; }
   virtual void printOn(std::ostream &out) const override { 
     out << "Clause" << "(" << *pat << ", " << *exp << ")";
+  }
+
+  virtual void sem(Type* t) override {
+    st.openScope();
+    pat->sem(t);
+    exp->sem();
+    st.closeScope();
+  }
+
+  Type* getetype() {
+    return exp->getType();
   }
 
 private:
@@ -1065,6 +1264,23 @@ public:
     out << ")";
   }
   void append(Clause *cc) { clist.push_back(cc); }
+
+  virtual void sem(Type* t) override {
+    Type* check;
+    clist[0]->sem(t);
+    check = clist[0]->getetype();
+    for (Clause *c : clist) {
+      c->sem(t);
+      if(c->getetype()!=check){
+        fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+        exit(1);
+      }
+    }
+  }
+
+  Type* getctype() {
+    return clist[0]->getetype();
+  }
   
 private:
   std::vector<Clause *> clist;
@@ -1078,6 +1294,26 @@ public:
   ~Match() { delete exp; delete clist;}
   virtual void printOn(std::ostream &out) const override {
     out << "Match" << "(" << *exp << ", " << *clist << ")"; 
+  }
+
+  virtual void sem() override {
+    exp->sem();
+    if(exp->getType()->val==TYPE_Tid) {
+      SymbolEntry* exist;
+      exist = st.lookup(exp->getType()->getID());
+      if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
+        clist->sem(exp->getType());
+        type = clist->getctype();
+      }
+      else {
+        fprintf(stderr, "Error: %s\n", "Not valid type!!!");
+        exit(1);
+      }
+    }
+    else {
+        fprintf(stderr, "Error: %s\n", "Not valid type!!!");
+        exit(1);
+    }
   }
 
 private:

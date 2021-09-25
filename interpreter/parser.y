@@ -3,6 +3,8 @@
     #include <cstdlib>
     #include "ast.hpp"
     #include "lexer.hpp"
+
+    SymbolTable st;
 %}
     
 %token T_and "and"
@@ -139,6 +141,7 @@
 
 program:
     deflist {
+    $1->sem();
     std::cout << "AST: " << *$1 << std::endl;
     //$1->run();
   }

@@ -25,6 +25,14 @@ class SymbolEntry {
       return next;
     }
 
+    Entry_Type getEType() {
+      return entry_type;
+    }
+
+    virtual Type* getType() {}
+
+    virtual std::vector<Type*> getVector() {} 
+
   protected:
     Entry_Type entry_type;
     SymbolEntry *next;
@@ -41,6 +49,10 @@ class SymVariable: public SymbolEntry {
       type = t;
     }
 
+  virtual Type* getType() override {
+    return type;
+  }  
+
   private:
     Type* type;
 };
@@ -53,6 +65,10 @@ class SymConstant: public SymbolEntry {
       type = t;
     }
 
+    virtual Type* getType() override {
+    return type;
+    }  
+
   private:
     Type* type;
 };
@@ -64,6 +80,10 @@ class SymType: public SymbolEntry {
       next = n; 
       type = t;
     }
+
+    virtual Type* getType() override {
+    return type;
+    }  
 
   private:
     Type* type;
@@ -79,6 +99,14 @@ class SymFunction: public SymbolEntry {
       res_type = t;
     }
 
+    virtual Type* getType() override {
+    return res_type;
+    }
+
+    std::vector<Type*> getVector() override {
+      return par_type;
+    }
+
   private:
     std::vector<Type*> par_type;
     Type* res_type;
@@ -90,6 +118,10 @@ class SymIdentifier: public SymbolEntry {
       entry_type = ENTRY_IDENTIFIER;
       next = n; 
       type = t;
+    }
+
+    virtual Type* getType() override {
+    return type;
     }
 
   private:
@@ -105,6 +137,14 @@ class SymConstructor: public SymbolEntry {
       res_type = t;
     }
 
+    virtual Type* getType() override {
+    return res_type;
+    }
+
+    std::vector<Type*> getVector() override {
+      return par_type;
+    }
+
   private:
     std::vector<Type*> par_type;
     Type* res_type;
@@ -116,6 +156,10 @@ class SymParameter: public SymbolEntry {
       entry_type = ENTRY_PARAMETER;
       next = n; 
       type = t;
+    }
+
+    virtual Type* getType() override {
+    return type;
     }
 
   private:

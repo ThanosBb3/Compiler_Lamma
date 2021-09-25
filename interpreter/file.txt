@@ -1,0 +1,4 @@
+flex -s -olexer.cpp lexer.l
+bison -dv -o parser.cpp parser.y
+c++ -Wall -std=c++11   -c -o lexer.o lexer.cpp
+<builtin>: recipe for target 'lexer.o' failed
