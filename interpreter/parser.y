@@ -1,11 +1,15 @@
 %{
     #include <cstdio>
     #include <cstdlib>
+    #include "AST_main.hpp"
+    #include "type.hpp"
     #include "ast.hpp"
     #include "lexer.hpp"
 
     SymbolTable st;
+    std::unordered_map<char*, SymbolEntry*> globals;
 %}
+
     
 %token T_and "and"
 %token T_array "array"

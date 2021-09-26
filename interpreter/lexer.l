@@ -1,4 +1,6 @@
 %{
+#include "AST_main.hpp"
+#include "type.hpp"
 #include "ast.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"

@@ -3,9 +3,10 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <string.h>
 #include "AST_main.hpp"
-#include "symbol.hpp"
 #include "type.hpp"
+#include "symbol.hpp"
 
 class Expr: public AST {
 public:
@@ -400,7 +401,14 @@ public:
   void append(Type *tt) { tlist.push_back(tt); }
   
   virtual void sem() override{
-    for (Type *t : tlist) t->sem();
+    for (Type *t : tlist) {
+      if(t->val==TYPE_Tid) {
+        if(st.lookup(t->getID())==nullptr){
+          fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+          exit(1);
+        }
+      }
+    }
   }
 
   std::vector<Type*> getVector() {
@@ -1098,7 +1106,7 @@ public:
         fprintf(stderr, "Error: %s\n", "Unequal sizes!!!");
         exit(1);
       }
-      for (int i=0; i<argtypes.size(); i++) {
+      for (int i=0; i<int(argtypes.size()); i++) {
         if(vtypes[i]->val!=argtypes[i]->val){
           fprintf(stderr, "Error: %s\n", "Not valid types!!!");
           exit(1);
@@ -1183,7 +1191,7 @@ public:
         fprintf(stderr, "Error: %s\n", "Unequal sizes!!!");
         exit(1);
       }
-      for (int i=0; i<argtypes.size(); i++) {
+      for (int i=0; i<int(argtypes.size()); i++) {
         if(vtypes[i]->val!=argtypes[i]->val){
           fprintf(stderr, "Error: %s\n", "Not valid types!!!");
           exit(1);

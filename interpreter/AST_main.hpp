@@ -1,7 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include "type.hpp"
+
+class Type;
 
 class AST {
 public:
@@ -10,3 +11,8 @@ public:
   virtual void sem() {}
   virtual void sem(Type*) {}
 };
+
+inline std::ostream& operator<< (std::ostream &out, const AST &t) {
+  t.printOn(out);
+  return out;
+}

@@ -2,30 +2,26 @@
 
 #include <iostream>
 #include "AST_main.hpp"
-#include "symbol.hpp"
-
-SymbolTable st;
 
 enum Types { TYPE_Unit, TYPE_Integer, TYPE_Boolean, TYPE_Real, TYPE_Array, TYPE_Char, TYPE_Tref, TYPE_Tfun, TYPE_Tid , TYPE_Unknown};
 
-class Type : public AST{
+class Type : public AST {
   public:
+    Type() {}
+    virtual ~Type() {}
     virtual void printOn(std::ostream &out) const override {
     out << "Type()";
   }
     virtual bool operator==(const Type &that) const { return false; }
 
-    virtual char* getID() {}
+    virtual char* getID() {
+      return nullptr;
+    }
 
     Types val;
     Type *oftype;
     int size;
 };
-
-inline std::ostream& operator<< (std::ostream &out, const AST &t) {
-  t.printOn(out);
-  return out;
-}
 
 class Unit: public Type {
 public:
@@ -95,12 +91,6 @@ public:
   ~Typeid() { delete id; }
   virtual void printOn(std::ostream &out) const override {
     out << "Typeid (" << id << ")";
-  }
-  virtual void sem() override {
-    if(st.lookup(id)==nullptr){
-      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
-      exit(1);
-    }
   }
 
   char* getID() override {

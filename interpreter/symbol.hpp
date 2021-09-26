@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include "AST_main.hpp"
 #include "type.hpp"
 
 enum Entry_Type { 
@@ -29,9 +30,14 @@ class SymbolEntry {
       return entry_type;
     }
 
-    virtual Type* getType() {}
+    virtual Type* getType() {
+      return nullptr;
+    }
 
-    virtual std::vector<Type*> getVector() {} 
+    virtual std::vector<Type*> getVector() {
+      std::vector<Type*> vt;
+      return vt;
+    } 
 
   protected:
     Entry_Type entry_type;
