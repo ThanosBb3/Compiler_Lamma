@@ -589,6 +589,10 @@ public:
     return tps;
   }
 
+  int getSize() {
+    return size;
+  }
+
 private:
   std::vector<Par *> plist;
   int size;
@@ -616,7 +620,7 @@ public:
 
   virtual void sem() {
 
-    if(plist==nullptr && exp!=nullptr) {
+    if(plist->getSize()==0 && exp!=nullptr) {
       if(tp==nullptr) {
         st.insert(iden, exp->getType(), ENTRY_CONSTANT);
         exp->sem();
@@ -634,7 +638,7 @@ public:
       }
     }
 
-    if(plist!=nullptr) {
+    if(plist->getSize()>0) {
       if(tp==nullptr) {
         st.insert(iden, exp->getType(), ENTRY_FUNCTION, plist->getPartypes());
         st.openScope();
