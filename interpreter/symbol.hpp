@@ -45,7 +45,7 @@ class SymbolEntry {
 
 };
 
-extern std::unordered_map<char*, SymbolEntry*> globals;
+extern std::unordered_map<std::string, SymbolEntry*> globals;
 
 class SymVariable: public SymbolEntry {
   public:
@@ -72,7 +72,7 @@ class SymConstant: public SymbolEntry {
     }
 
     virtual Type* getType() override {
-    return type;
+      return type;
     }  
 
   private:
@@ -88,7 +88,7 @@ class SymType: public SymbolEntry {
     }
 
     virtual Type* getType() override {
-    return type;
+      return type;
     }  
 
   private:
@@ -106,7 +106,7 @@ class SymFunction: public SymbolEntry {
     }
 
     virtual Type* getType() override {
-    return res_type;
+      return res_type;
     }
 
     std::vector<Type*> getVector() override {
@@ -127,7 +127,7 @@ class SymIdentifier: public SymbolEntry {
     }
 
     virtual Type* getType() override {
-    return type;
+      return type;
     }
 
   private:
@@ -144,7 +144,7 @@ class SymConstructor: public SymbolEntry {
     }
 
     virtual Type* getType() override {
-    return res_type;
+      return res_type;
     }
 
     std::vector<Type*> getVector() override {
@@ -165,7 +165,7 @@ class SymParameter: public SymbolEntry {
     }
 
     virtual Type* getType() override {
-    return type;
+      return type;
     }
 
   private:
@@ -174,12 +174,12 @@ class SymParameter: public SymbolEntry {
 
 class Scope {
 public:
-  std::unordered_map<char*, SymbolEntry*> locals;  // Hash-map matching variable names to SymbolEntries
+  std::unordered_map<std::string , SymbolEntry*> locals;  // Hash-map matching variable names to SymbolEntries
 
   Scope() {}  // Initializer: hash map locals is empty
-  SymbolEntry *insert(char* c, Type* t, SymbolEntry *n, Entry_Type etype) {
+  SymbolEntry *insert(std::string c, Type* t, SymbolEntry *n, Entry_Type etype) {
     if (locals.find(c) != locals.end()) {  
-      std::cerr << ("Duplicate entry " + std::string(c) + " in this scope!!!") << std::endl;  // Print error message
+      std::cerr << ("Duplicate entry " + c + " in this scope!!!") << std::endl;  // Print error message
       exit(1);
     }
     switch(etype) {
@@ -204,9 +204,9 @@ public:
     }
     return (locals[c]);  // Return pointer to the new entry
   }
-  SymbolEntry *insert(char* c, Type* rt, SymbolEntry *n, Entry_Type etype, std::vector<Type*> vt) {
+  SymbolEntry *insert(std::string c, Type* rt, SymbolEntry *n, Entry_Type etype, std::vector<Type*> vt) {
     if (locals.find(c) != locals.end()) {  
-      std::cerr << ("Duplicate entry " + std::string(c) + " in this scope!!!") << std::endl;  // Print error message
+      std::cerr << ("Duplicate entry " + c + " in this scope!!!") << std::endl;  // Print error message
       exit(1);
     }
     switch(etype) {
@@ -231,7 +231,7 @@ public:
    scopes.push_back(new Scope());  // Push new scope on the top of data stack
   }
   void closeScope() {  // Removes top scope
-    for (std::unordered_map<char*, SymbolEntry*>::iterator it = scopes.back()->locals.begin(); it != scopes.back()->locals.end(); it++) {
+    for (std::unordered_map<std::string, SymbolEntry*>::iterator it = scopes.back()->locals.begin(); it != scopes.back()->locals.end(); it++) {
       if (it->second->getNext() == nullptr){
         globals.erase(it->first);
       }
@@ -242,22 +242,25 @@ public:
     scopes.pop_back();  // Remove top scope
   };
   SymbolEntry *lookup(char* c) {
-    if (globals.find(c) == globals.end()) {
+    std::string str(c);
+    if (globals.find(str) == globals.end()) {
       return nullptr;
     }
-    return globals[c];  // If entry exists return pointer to its SymbolEntry
+    return globals[str];  // If entry exists return pointer to its SymbolEntry
   }
   void insert(char* c, Type* t, Entry_Type etype) {
     SymbolEntry *n;  // Pointer to next variable with the same name
-    if (globals.find(c) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr
-    else n = globals[c];  // else point to it
-    globals[c] = scopes.back()->insert(c, t, n, etype); // Insert SymbolEntry to top Scope
+    std::string str(c);
+    if (globals.find(str) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr
+    else n = globals[str];  // else point to it
+    globals[str] = scopes.back()->insert(str, t, n, etype); // Insert SymbolEntry to top Scope
   }
   void insert(char* c, Type* t, Entry_Type etype ,std::vector<Type*> vt) {
     SymbolEntry *n;  // Pointer to next variable with the same name
-    if (globals.find(c) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr
-    else n = globals[c];  // else point to it
-    globals[c] = scopes.back()->insert(c, t, n, etype, vt); // Insert SymbolEntry to top Scope
+    std::string str(c);
+    if (globals.find(str) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr
+    else n = globals[str];  // else point to it
+    globals[str] = scopes.back()->insert(str, t, n, etype, vt); // Insert SymbolEntry to top Scope
   }
   int getSizeOfCurrentScope() {
     if (scopes.empty()) {

@@ -7,7 +7,7 @@
     #include "lexer.hpp"
 
     SymbolTable st;
-    std::unordered_map<char*, SymbolEntry*> globals;
+    std::unordered_map<std::string, SymbolEntry*> globals;
 %}
 
     

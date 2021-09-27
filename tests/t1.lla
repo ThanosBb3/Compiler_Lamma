@@ -1,0 +1,10 @@
+type tree = Red | Green | Blue
+let mutable x : tree
+
+let y = match !x with
+            Red -> 1
+            | Green -> 54
+            | Blue -> 15237
+        end
+
+

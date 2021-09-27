@@ -11,7 +11,10 @@
 class Expr: public AST {
 public:
   bool type_check(Types t) {
-    if (type->val == t) return true;
+    if(type->val==TYPE_Unknown || t==TYPE_Unknown) {
+      return true;
+    }
+    else if (type->val == t) return true;
     else return false;
   }
 
@@ -368,7 +371,7 @@ public:
     }
     out << ")";
   }
-  void append(BlockComponent *bb) { blist.push_back(bb); }
+  void append(BlockComponent *bb) { blist.push_back(bb); size++;}
   
   virtual void sem() override{
     st.openScope();
@@ -398,7 +401,7 @@ public:
     }
     out << ")";
   }
-  void append(Type *tt) { tlist.push_back(tt); }
+  void append(Type *tt) { tlist.push_back(tt); size++;}
   
   virtual void sem() override{
     for (Type *t : tlist) {
@@ -433,9 +436,14 @@ public:
   }
 
   virtual void sem(Type* t) override {
+    if(tlist!=nullptr){
       tlist->sem();
       st.insert(iden, t, ENTRY_CONSTRUCTOR, tlist->getVector());
-
+    }
+    else {
+      std::vector<Type*> vt;
+      st.insert(iden, t, ENTRY_CONSTRUCTOR, vt);
+    }
   }
 
 private:
@@ -460,7 +468,7 @@ public:
     }
     out << ")";
   }
-  void append(Constr *cc) { clist.push_back(cc); }
+  void append(Constr *cc) { clist.push_back(cc); size++;}
   
   virtual void sem(Type* t) override{
     for (Constr *c : clist) c->sem(t);
@@ -508,7 +516,7 @@ public:
     }
     out << ")";
   }
-  void append(Tdef *tt) { dlist.push_back(tt); }
+  void append(Tdef *tt) { dlist.push_back(tt); size++;}
   
   virtual void sem() override{
     for (Tdef *d : dlist) d->sem();
@@ -548,7 +556,10 @@ public:
   }
 
   virtual void sem() override {
-    st.insert(iden, tp, ENTRY_PARAMETER);
+    if (tp==nullptr){
+      st.insert(iden, new Tunknown(), ENTRY_PARAMETER);
+    }
+    else {st.insert(iden, tp, ENTRY_PARAMETER);}
   }
 
   Type* getType() {
@@ -577,7 +588,7 @@ public:
     }
     out << ")";
   }
-  void append(Par *pp) { plist.push_back(pp); }
+  void append(Par *pp) { plist.push_back(pp); size++;}
   
   virtual void sem() override{
     for (Par *p : plist) p->sem();
@@ -620,67 +631,75 @@ public:
 
   virtual void sem() {
 
-    if(plist->getSize()==0 && exp!=nullptr) {
-      if(tp==nullptr) {
-        st.insert(iden, exp->getType(), ENTRY_CONSTANT);
-        exp->sem();
-      }
-      else {
-        if (exp->type_check(tp->val)) {
-          st.insert(iden, tp, ENTRY_CONSTANT);
-          plist->sem();
+    if(plist!=nullptr && exp!=nullptr) {
+      if(plist->getSize()==0) {
+        if(tp==nullptr) {
           exp->sem();
+          st.insert(iden, exp->getType(), ENTRY_CONSTANT);
         }
         else {
-          fprintf(stderr, "Error: %s\n", "Type and value of constant do not match!!!");
-          exit(1);
+          if (exp->type_check(tp->val)) {
+            exp->sem();
+            st.insert(iden, tp, ENTRY_CONSTANT);
+          }
+          else {
+            fprintf(stderr, "Error: %s\n", "Type and value of constant do not match!!!");
+            exit(1);
+          }
         }
       }
-    }
 
-    if(plist->getSize()>0) {
-      if(tp==nullptr) {
-        st.insert(iden, exp->getType(), ENTRY_FUNCTION, plist->getPartypes());
-        st.openScope();
-        plist->sem();
-        exp->sem();
-        st.closeScope();
-      }
       else {
-        if (exp->type_check(tp->val)) {
-          st.insert(iden, tp, ENTRY_FUNCTION, plist->getPartypes());
+        if(tp==nullptr) {
+          
+          std::vector<Type*> vt;
+          Type* t;
           st.openScope();
           plist->sem();
-          tp->sem();
+          
           exp->sem();
+          
+          t = exp->getType();
+          vt = plist->getPartypes();
           st.closeScope();
+          st.insert(iden, t, ENTRY_FUNCTION, vt);
         }
         else {
-          fprintf(stderr, "Error: %s\n", "Result type and value type of function do not match!!!");
-          exit(1);
+          std::vector<Type*> vt;
+          st.openScope();
+          plist->sem();
+          exp->sem();
+          if (exp->type_check(tp->val)) {
+            vt = plist->getPartypes();
+            st.closeScope();
+            st.insert(iden, tp, ENTRY_FUNCTION, vt);
+          }
+          else {
+            st.closeScope();
+            fprintf(stderr, "Error: %s\n", "Result type and value type of function do not match!!!");
+            exit(1);
+          }
         }
       }
     }
 
-    if(exp==nullptr && elist==nullptr) {
+    else if(exp==nullptr && elist==nullptr) {
       if(tp==nullptr) {
         st.insert(iden, new Tunknown(), ENTRY_VARIABLE);
       }
       else{
         st.insert(iden, new Tref(tp), ENTRY_VARIABLE);
-        tp->sem();
       }
     }
 
-    if(elist!=nullptr) {
+    else if(elist->getSize()>0) {
       if(tp==nullptr) {
-        st.insert(iden, new Array(new Tunknown(), elist->getSize()), ENTRY_VARIABLE);
         elist->sem();
+        st.insert(iden, new Array(new Tunknown(), elist->getSize()), ENTRY_VARIABLE);
       }
       else {
-        st.insert(iden, new Array(tp, elist->getSize()), ENTRY_VARIABLE);
         elist->sem();
-        tp->sem();
+        st.insert(iden, new Array(tp, elist->getSize()), ENTRY_VARIABLE);
       }
     }
 
@@ -710,7 +729,7 @@ public:
     }
     out << ")";
   }
-  void append(Def *dd) { dlist.push_back(dd); }
+  void append(Def *dd) { dlist.push_back(dd); size++;}
 
   virtual void sem() override{
     for (Def *d : dlist) d->sem();
@@ -976,7 +995,7 @@ public:
     SymbolEntry* idd;
     idd = st.lookup(name);
     if(idd!=nullptr){
-      type = idd->getType();  
+      type = idd->getType();
     }
     else{
       fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
@@ -1014,7 +1033,7 @@ public:
           exit(1);
         }
       }
-      type = new Tref(arr->getType());
+      type = new Tref(arr->getType()->oftype);
       }
     else {
       fprintf(stderr, "Error: %s\n", "Not array!!!");
@@ -1070,7 +1089,7 @@ public:
     }
     out << ")";
   }
-  void append(Valexpr *vv) { velist.push_back(vv); }
+  void append(Valexpr *vv) { velist.push_back(vv); size++;}
 
   virtual void sem() override{
     for (Valexpr *v : velist) v->sem();
@@ -1275,7 +1294,7 @@ public:
     }
     out << ")";
   }
-  void append(Clause *cc) { clist.push_back(cc); }
+  void append(Clause *cc) { clist.push_back(cc); size++;}
 
   virtual void sem(Type* t) override {
     Type* check;
@@ -1318,12 +1337,12 @@ public:
         type = clist->getctype();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Not valid type!!!");
+        fprintf(stderr, "Error: %s\n", "Not valid 1type!!!");
         exit(1);
       }
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Not valid type!!!");
+        fprintf(stderr, "Error: %s\n", "Not valid 2type!!!");
         exit(1);
     }
   }

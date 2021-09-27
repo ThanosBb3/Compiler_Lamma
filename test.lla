@@ -1,6 +1,6 @@
 let x = 3
 
-let mutable y
+let y = x +. 3
 
 
 
