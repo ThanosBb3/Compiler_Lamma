@@ -18,6 +18,14 @@ class Type : public AST {
       return nullptr;
     }
 
+    bool type_check(Types t) {
+    if(val==TYPE_Unknown || t==TYPE_Unknown) {
+      return true;
+    }
+    else if (val == t) return true;
+    else return false;
+  }
+
     Types val;
     Type *oftype;
     int size;

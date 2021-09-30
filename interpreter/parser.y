@@ -134,7 +134,7 @@
 %type<num> muldim
 %type<expr> expr
 %type<vlist> mulexpr2 mulpat
-%type<valexpr> valexpr pattern1
+%type<valexpr> valexpr pattern1 pattern2
 %type<clauselist> mulclause
 %type<clause> clause
 %type<pattern> pattern
@@ -334,12 +334,16 @@ pattern1:
 |   "false"                             { $$ = new Constbool(0); }
 |   T_id                                { $$ = new Id(false, $1); }
 |   '(' pattern ')'                     { $$ = new BrackPat($2); }
+;
+
+pattern2:
+    pattern1                            { $$ = $1;}
 |   T_Id                                { $$ = new Id(true, $1); }
 ;
 
 mulpat:
     /* nothing */                       { $$ = new Valexprlist(); }
-|   mulpat pattern1                     { $1->append($2); $$ = $1; }
+|   mulpat pattern2                     { $1->append($2); $$ = $1; }
 ;
 
 

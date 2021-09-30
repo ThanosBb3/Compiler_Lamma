@@ -3,10 +3,27 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <list>
 #include <string.h>
 #include "AST_main.hpp"
 #include "type.hpp"
 #include "symbol.hpp"
+
+inline const char* ToString(Type* t)
+{
+    switch (t->val)
+    {
+        case TYPE_Unit:   return "unit";
+        case TYPE_Integer:   return "int";
+        case TYPE_Char: return "char";
+        case TYPE_Boolean:   return "bool";
+        case TYPE_Real:   return "real";
+        case TYPE_Array: return "array";
+        case TYPE_Tref: return "reference";
+        case TYPE_Unknown:   return "unknown";
+        default:      return "never coming here";
+    }
+}
 
 class Expr: public AST {
 public:
@@ -86,7 +103,7 @@ public:
         type = new Integer();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: Type Mismatch! Expected two integers and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
         exit(1);
       }
     }
@@ -96,27 +113,27 @@ public:
         type = new Real();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: Type Mismatch! Expected two reals and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
         exit(1);
       }
     }
 
     else if(! strcmp(op, "=") || ! strcmp(op, "<>") || ! strcmp(op, "==") || ! strcmp(op, "!=")) {
-      if(!(left->type_check(TYPE_Array)) && !(left->type_check(TYPE_Tfun)) && (left->getVal() == right->getVal())) {
+      if(!(left->getVal()==TYPE_Array) && !(left->getVal()==TYPE_Tfun) && (left->type_check(right->getVal()))) {
         type = new Boolean();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: Type Mismatch! Expected two arguments of the same comparable type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
         exit(1);
       }
     }
 
     else if(! strcmp(op, "<") || ! strcmp(op, ">") || ! strcmp(op, "<=") || ! strcmp(op, ">=")) {
-      if((left->type_check(TYPE_Integer) || left->type_check(TYPE_Real) || left->type_check(TYPE_Char)) && (left->getVal() == right->getVal())) {
+      if((left->type_check(TYPE_Integer) || left->type_check(TYPE_Real) || left->type_check(TYPE_Char)) && (left->type_check(right->getVal()))) {
         type = new Boolean();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: Type Mismatch! Expected two arguments of the same comparable type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
         exit(1);
       }
     }
@@ -126,7 +143,7 @@ public:
         type = new Boolean();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: Type Mismatch! Expected two booleans and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
         exit(1);
       }
     }
@@ -136,7 +153,7 @@ public:
         type = new Unit();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: Type Mismatch! Expected a reference and an expression of its type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
         exit(1);
       }
     }
@@ -247,7 +264,7 @@ public:
       stmt1->sem();
       if (stmt2 != nullptr) {
         stmt2->sem();
-        if (stmt1->getVal() != stmt2->getVal()) {
+        if (!(stmt1->type_check(stmt2->getVal()))) {
           fprintf(stderr, "Error: %s\n", "Type Mismatch between then and else statements!!!");
           exit(1);
         }
@@ -375,9 +392,121 @@ public:
   
   virtual void sem() override{
     st.openScope();
+
+    std::string name = "print_int";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Integer()));
+
+    name = "print_bool";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Boolean()));
+
+    name = "print_char";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Char()));
+
+    name = "print_float";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Real()));
+
+    name = "print_string";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Array(new Char(), 1)));
+
+    name = "read_int";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v(new Unit()));
+
+    name = "read_bool";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Boolean(), create_v(new Unit()));
+
+    name = "read_char";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Char(), create_v(new Unit()));
+
+    name = "read_float";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Unit()));
+
+    name = "read_string";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Array(new Char(), 1)));
+
+    name = "abs";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v(new Integer()));
+
+    name = "fabs";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "sqrt";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "sin";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "cos";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "tan";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "atan";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "exp";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "ln";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Real()));
+
+    name = "pi";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Unit()));
+
+    name = "incr";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Tref(new Integer())));
+
+    name = "decr";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v(new Tref(new Integer())));
+
+    name = "float_of_int";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Real(), create_v(new Integer()));
+
+    name = "int_of_float";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v(new Real()));
+
+    name = "round";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v(new Real()));
+
+    name = "int_of_char";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v(new Char()));
+
+    name = "char_of_int";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Char(), create_v(new Integer()));
+
+    name = "strlen";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v(new Array(new Char(), 1)));
+
+    name = "strcmp";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Integer(), create_v2(new Array(new Char(), 1), new Array(new Char(), 1)));
+
+    name = "strcpy";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v2(new Array(new Char(), 1), new Array(new Char(), 1)));
+
+    name = "strcat";
+    add_func(strcpy(new char[name.length() + 1], name.c_str()), new Unit(), create_v2(new Array(new Char(), 1), new Array(new Char(), 1)));
+
     for (BlockComponent *b : blist) b->sem();
     st.closeScope();
   }
+
+  void add_func(char* c, Type* t ,std::vector<Type*> vt) {
+    st.insert(c, t, ENTRY_FUNCTION, vt);
+  }
+
+  std::vector<Type*> create_v(Type* arg1) {
+    std::vector<Type*> vt;
+    vt.push_back(arg1);
+    return vt;
+  }
+
+  std::vector<Type*> create_v2(Type* arg1, Type* arg2) {
+    std::vector<Type*> vt;
+    vt.push_back(arg1);
+    vt.push_back(arg2);
+    return vt;
+  }
+
 
 private:
   std::vector<BlockComponent *> blist;
@@ -555,15 +684,23 @@ public:
     out << " )"; 
   }
 
+  Type* tp2;
+
   virtual void sem() override {
     if (tp==nullptr){
-      st.insert(iden, new Tunknown(), ENTRY_PARAMETER);
+      tp2 = new Tunknown();
+      st.insert(iden, tp2, ENTRY_PARAMETER);
     }
     else {st.insert(iden, tp, ENTRY_PARAMETER);}
   }
 
   Type* getType() {
-    return tp;
+    if(tp!=nullptr) {
+      return tp;
+    }
+    else {
+      return tp2;
+    }
   } 
 
 private:
@@ -630,7 +767,7 @@ public:
   }
 
   virtual void sem() {
-
+    
     if(plist!=nullptr && exp!=nullptr) {
       if(plist->getSize()==0) {
         if(tp==nullptr) {
@@ -685,7 +822,103 @@ public:
 
     else if(exp==nullptr && elist==nullptr) {
       if(tp==nullptr) {
-        st.insert(iden, new Tunknown(), ENTRY_VARIABLE);
+        Type* t2p;
+        t2p = new Tunknown();
+        st.insert(iden, new Tref(t2p), ENTRY_VARIABLE);
+      }
+      else{
+        st.insert(iden, new Tref(tp), ENTRY_VARIABLE);
+      }
+    }
+
+    else if(elist->getSize()>0) {
+      if(tp==nullptr) {
+        elist->sem();
+        st.insert(iden, new Array(new Tunknown(), elist->getSize()), ENTRY_VARIABLE);
+      }
+      else {
+        elist->sem();
+        st.insert(iden, new Array(tp, elist->getSize()), ENTRY_VARIABLE);
+      }
+    }
+
+  }
+
+  virtual void sem(bool b) {
+
+    if(plist!=nullptr && exp!=nullptr) {
+      if(plist->getSize()==0) {
+        if(tp==nullptr) {
+          if(!b) {
+            exp->sem();
+          }
+          else {
+            st.insert(iden, new Tunknown(), ENTRY_CONSTANT);
+          }
+        }
+        else {
+          if (exp->type_check(tp->val)) {
+            if(!b) {
+              exp->sem();
+            }
+            else {
+              st.insert(iden, tp, ENTRY_CONSTANT);
+            }
+          }
+          else {
+            fprintf(stderr, "Error: %s\n", "Type and value of constant do not match!!!");
+            exit(1);
+          }
+        }
+      }
+
+      else {
+        if(tp==nullptr) {
+          st.openScope();
+          plist->sem();
+          if(!b) {
+          //  Type* t;
+            exp->sem();
+          //  t = exp->getType();
+            st.closeScope();
+          }
+          else {
+            std::vector<Type*> vt;
+            vt = plist->getPartypes();
+            st.closeScope();
+            st.insert(iden, new Tunknown(), ENTRY_FUNCTION, vt);
+          }
+        }
+        else {
+          st.openScope();
+          plist->sem();
+          if(!b) {
+            exp->sem();
+            if (exp->type_check(tp->val)) {
+              st.closeScope();
+            }
+            else {
+              st.closeScope();
+              fprintf(stderr, "Error: %s\n", "Result type and value type of function do not match!!!");
+              exit(1);
+            }
+          }
+          else {
+            std::vector<Type*> vt;
+            vt = plist->getPartypes();
+            st.closeScope();
+            st.insert(iden, tp, ENTRY_FUNCTION, vt);
+          }
+        }
+      }
+    }
+
+
+    else if(exp==nullptr && elist==nullptr) {
+      if(tp==nullptr) {
+        Type* t2p;
+        t2p = new Tunknown();
+        st.insert(iden, new Tref(t2p), ENTRY_VARIABLE);
       }
       else{
         st.insert(iden, new Tref(tp), ENTRY_VARIABLE);
@@ -731,8 +964,18 @@ public:
   }
   void append(Def *dd) { dlist.push_back(dd); size++;}
 
-  virtual void sem() override{
-    for (Def *d : dlist) d->sem();
+  virtual void sem(bool b) override{
+    if(!b) {
+      for (Def *d : dlist) d->sem();
+    }
+    else {
+      for (Def *d : dlist) {
+        d->sem(b);
+      }
+      for (Def *d : dlist) {
+        d->sem(!b);
+      }
+    }
   }
   
 private:
@@ -746,13 +989,13 @@ public:
     check(b), dlist(l) {}
   ~Let() { delete dlist; }
   virtual void printOn(std::ostream &out) const override {
-    if (check) out << "LetRec(" << *dlist << ")";
-    out << "Let(" << *dlist << ")";
+    if (check) {out << "LetRec(" << *dlist << ")";}
+    else {out << "Let(" << *dlist << ")";}
   }
 
   virtual void sem() override{
     st.openScope();
-    dlist->sem();
+    dlist->sem(check);
   }
 
 private:
@@ -920,7 +1163,7 @@ public:
   }
 
   virtual void sem() override {
-    type = new Array(new Char(), strlen(str)-1);
+    type = new Array(new Char(), 1);
   }
 
 private:
@@ -1130,8 +1373,8 @@ public:
         exit(1);
       }
       for (int i=0; i<int(argtypes.size()); i++) {
-        if(vtypes[i]->val!=argtypes[i]->val){
-          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+        if(!(vtypes[i]->type_check(argtypes[i]->val))){
+          fprintf(stderr, "Error: %s\n", "Not valid 5types!!!");
           exit(1);
         }
       }
@@ -1160,39 +1403,42 @@ public:
   }
 
   virtual void sem(Type* t) override {
-    if(id!=nullptr) {
+    if(id==nullptr) {
       ve->sem(t);
       switch(ve->getVal()) {
         case(TYPE_Integer):
           if(t->val!=TYPE_Integer){
-            fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+            fprintf(stderr, "Error: %s\n", "Not 6valid types!!!");
             exit(1);
           }
           break;
 
         case(TYPE_Real):
            if(t->val!=TYPE_Real){
-            fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+            fprintf(stderr, "Error: %s\n", "Not 7valid types!!!");
             exit(1);
           }
           break;
 
         case(TYPE_Char):
           if(t->val!=TYPE_Char){
-            fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+            fprintf(stderr, "Error: %s\n", "Not 8valid types!!!");
             exit(1);
           }
           break;
 
         case(TYPE_Boolean):
           if(t->val!=TYPE_Boolean){
-          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          fprintf(stderr, "Error: %s\n", "Not 9valid types!!!");
           exit(1);
           }
           break;
 
+        case(TYPE_Tid):
+          break;
+
         default:
-          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          fprintf(stderr, "Error: %s\n", "Not 10valid types!!!");
           exit(1);
       }
     }
@@ -1216,7 +1462,7 @@ public:
       }
       for (int i=0; i<int(argtypes.size()); i++) {
         if(vtypes[i]->val!=argtypes[i]->val){
-          fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+          fprintf(stderr, "Error: %s\n", "Not 11valid types!!!");
           exit(1);
         }
       }
@@ -1272,6 +1518,10 @@ public:
     return exp->getType();
   }
 
+  Types getVal() {
+    return exp->getType()->val;
+  }
+
 private:
   Pattern *pat;
   Expr *exp;
@@ -1297,13 +1547,13 @@ public:
   void append(Clause *cc) { clist.push_back(cc); size++;}
 
   virtual void sem(Type* t) override {
-    Type* check;
+    Types check;
     clist[0]->sem(t);
-    check = clist[0]->getetype();
+    check = clist[0]->getVal();
     for (Clause *c : clist) {
       c->sem(t);
-      if(c->getetype()!=check){
-        fprintf(stderr, "Error: %s\n", "Not valid types!!!");
+      if(c->getVal()!=check){
+        fprintf(stderr, "Error: %s\n", "Not 12valid 3types!!!");
         exit(1);
       }
     }
@@ -1337,12 +1587,12 @@ public:
         type = clist->getctype();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Not valid 1type!!!");
+        fprintf(stderr, "Error: %s\n", "Not 13valid 1type!!!");
         exit(1);
       }
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Not valid 2type!!!");
+        fprintf(stderr, "Error: %s\n", "Not 14valid 2type!!!");
         exit(1);
     }
   }
