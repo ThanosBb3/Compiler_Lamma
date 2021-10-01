@@ -156,8 +156,8 @@ class Tunknown: public Type {
 public:
   Tunknown() {
     val = TYPE_Unknown;
-    oftype = nullptr;
-    size = -1;
+    oftype = this;
+    size = INT8_MAX;
   }
   virtual void printOn(std::ostream &out) const override {
     out << "T_unknown";

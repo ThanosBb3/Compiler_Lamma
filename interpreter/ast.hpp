@@ -47,6 +47,10 @@ public:
     return type->oftype->val;
   }
 
+  virtual char* getname() {
+    return nullptr;
+  } 
+
 protected:
   Type *type;  
 };
@@ -100,6 +104,16 @@ public:
 
     if(! strcmp(op, "+") || ! strcmp(op, "-") || ! strcmp(op, "*") || ! strcmp(op, "/") || ! strcmp(op, "mod")) {
       if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+        if(left->getVal()==TYPE_Unknown) {
+          SymbolEntry* p;
+          p = st.lookup(left->getname());
+          if(p!=nullptr){
+            if(p->getType()->val==TYPE_Tref) {
+              p->getType()->oftype = new Integer();
+            }
+            else p->changeType(new Integer());
+          }
+        }
         type = new Integer();
       }
       else {
@@ -149,7 +163,7 @@ public:
     }
 
     else if(! strcmp(op, ":=")) {
-      if(left->type_check(TYPE_Tref) && (right->getVal() == left->getOfval())) {
+      if(left->type_check(TYPE_Tref) && (right->type_check(left->getOfval()))) {
         type = new Unit();
       }
       else {
@@ -536,7 +550,7 @@ public:
     for (Type *t : tlist) {
       if(t->val==TYPE_Tid) {
         if(st.lookup(t->getID())==nullptr){
-          fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+          fprintf(stderr, "Error: %s\n", "Invalid Type1!!!");
           exit(1);
         }
       }
@@ -1038,7 +1052,7 @@ public:
       type = new Tref(tp1);
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      fprintf(stderr, "Error: %s\n", " Invalid Type 2!!!");
       exit(1);
     }
   }
@@ -1077,18 +1091,18 @@ private:
 
 class Dim: public Expr {
 public:
-  Dim(char *id, int i = -1): iden(id), ien(i) {}
+  Dim(char *id, int i = 1): iden(id), ien(i) {}
   ~Dim() { delete iden; }
   virtual void printOn(std::ostream &out) const override {
     out << "Dim" << "(" << iden;
-    if (ien >= 0 ) out << ", " << ien;
+    if (ien >= 2 ) out << ", " << ien;
     out << ")"; 
   }
 
   virtual void sem() override{
     SymbolEntry* arr;
     arr = st.lookup(iden);
-    if(arr!=nullptr && arr->getEType()==ENTRY_VARIABLE && arr->getType()->val==TYPE_Array){
+    if(arr!=nullptr && (arr->getEType()==ENTRY_VARIABLE || arr->getEType()==ENTRY_PARAMETER) && arr->getType()->type_check(TYPE_Array)){
       if(ien>=1 && ien<=arr->getType()->size) {
       type = new Integer();
       }
@@ -1098,7 +1112,7 @@ public:
       }
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      fprintf(stderr, "Error: %s\n", "Invalid Type 3!!!");
       exit(1);
     }
     
@@ -1241,7 +1255,7 @@ public:
       type = idd->getType();
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      fprintf(stderr, "Error: %s\n", "Invalid Type 4!!!");
       exit(1);
     }
   }
@@ -1249,6 +1263,10 @@ public:
   virtual void sem(Type* t) override {
     st.insert(name, t, ENTRY_CONSTANT);
     type = t;
+  }
+
+  virtual char* getname() override {
+    return name;
   }
 
 private:
@@ -1268,11 +1286,13 @@ public:
   virtual void sem() override{
     SymbolEntry* arr;
     arr = st.lookup(id);
-    if(arr!=nullptr && arr->getEType()==ENTRY_VARIABLE && arr->getType()->val==TYPE_Array){
+    fprintf(stderr, "ooo");
+    if(arr!=nullptr && (arr->getEType()==ENTRY_VARIABLE || arr->getEType()==ENTRY_PARAMETER ) && arr->getType()->type_check(TYPE_Array)){
+      fprintf(stderr, "here");
       elist->sem();
       for (Expr *e : elist->getExps()) {
         if(e->getType()->val!=TYPE_Integer) {
-          fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+          fprintf(stderr, "Error: %s\n", "Invalid Type 5!!!");
           exit(1);
         }
       }
@@ -1301,14 +1321,18 @@ public:
 
   virtual void sem() override {
     vexp->sem();
-    if(vexp->getType()->val==TYPE_Tref) {
+    if(vexp->getType()->type_check(TYPE_Tref)) {
       type = vexp->getType()->oftype;
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type!!!");
+      fprintf(stderr, "Error: %s\n", "Invalid Type 6!!!");
       exit(1);
     }
 }
+
+  virtual char* getname() override {
+    return vexp->getname();
+  }
 
 private:
   Valexpr *vexp;
@@ -1579,9 +1603,14 @@ public:
 
   virtual void sem() override {
     exp->sem();
-    if(exp->getType()->val==TYPE_Tid) {
+    if(exp->type_check(TYPE_Tid)) {
       SymbolEntry* exist;
       exist = st.lookup(exp->getType()->getID());
+      
+      while (exist!=nullptr && !(exist->getEType()==ENTRY_TYPE)) {
+        exist = exist->getNext();
+      }
+
       if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
         clist->sem(exp->getType());
         type = clist->getctype();
