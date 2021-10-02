@@ -1,6 +1,6 @@
 type pile = Left | Middle | Right
 
-let print_pile (pile : pile) =
+let print_pile pile =
     match pile with
     Left -> print_string "left"
     | Middle -> print_string "middle"

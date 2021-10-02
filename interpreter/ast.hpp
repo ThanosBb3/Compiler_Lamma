@@ -47,9 +47,16 @@ public:
     return type->oftype->val;
   }
 
-  virtual char* getname() {
+  virtual void type_inf(Type* t) {}
+
+  virtual SymbolEntry* inf_name() {
     return nullptr;
-  } 
+  }
+
+  virtual char* get_name() {
+    return nullptr;
+  }
+
 
 protected:
   Type *type;  
@@ -105,14 +112,10 @@ public:
     if(! strcmp(op, "+") || ! strcmp(op, "-") || ! strcmp(op, "*") || ! strcmp(op, "/") || ! strcmp(op, "mod")) {
       if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
         if(left->getVal()==TYPE_Unknown) {
-          SymbolEntry* p;
-          p = st.lookup(left->getname());
-          if(p!=nullptr){
-            if(p->getType()->val==TYPE_Tref) {
-              p->getType()->oftype = new Integer();
-            }
-            else p->changeType(new Integer());
-          }
+          left->type_inf(new Integer());
+        }
+        if(right->getVal()==TYPE_Unknown) {
+          right->type_inf(new Integer());
         }
         type = new Integer();
       }
@@ -124,6 +127,12 @@ public:
 
     else if(! strcmp(op, "+.") || ! strcmp(op, "-.") || ! strcmp(op, "*.") || ! strcmp(op, "/.") || ! strcmp(op, "**")) {
       if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+        if(left->getVal()==TYPE_Unknown) {
+          left->type_inf(new Real());
+        }
+        if(right->getVal()==TYPE_Unknown) {
+          right->type_inf(new Real());
+        }
         type = new Real();
       }
       else {
@@ -134,6 +143,19 @@ public:
 
     else if(! strcmp(op, "=") || ! strcmp(op, "<>") || ! strcmp(op, "==") || ! strcmp(op, "!=")) {
       if(!(left->getVal()==TYPE_Array) && !(left->getVal()==TYPE_Tfun) && (left->type_check(right->getVal()))) {
+        if(left->getVal()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
+          left->type_inf(right->getType());
+        }
+        else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
+          right->type_inf(left->getType());
+        }
+        // me nullptr taytizw tous typoys twn Symbolentries
+        else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
+          SymbolEntry* x1 = left->inf_name();
+          SymbolEntry* x2 =  right->inf_name();
+          x1->same.push_back(x2);
+          x2->same.push_back(x1);
+        }
         type = new Boolean();
       }
       else {
@@ -144,6 +166,19 @@ public:
 
     else if(! strcmp(op, "<") || ! strcmp(op, ">") || ! strcmp(op, "<=") || ! strcmp(op, ">=")) {
       if((left->type_check(TYPE_Integer) || left->type_check(TYPE_Real) || left->type_check(TYPE_Char)) && (left->type_check(right->getVal()))) {
+        if(left->getVal()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
+          left->type_inf(right->getType());
+        }
+        else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
+          right->type_inf(left->getType());
+        }
+        // me nullptr taytizw tous typoys twn Symbolentries
+        else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
+          SymbolEntry* x1 = left->inf_name();
+          SymbolEntry* x2 =  right->inf_name();
+          x1->same.push_back(x2);
+          x2->same.push_back(x1);
+        }
         type = new Boolean();
       }
       else {
@@ -154,6 +189,12 @@ public:
 
     else if(! strcmp(op, "&&") || ! strcmp(op, "||")) {
       if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+        if(left->getVal()==TYPE_Unknown) {
+          left->type_inf(new Boolean());
+        }
+        if(right->getVal()==TYPE_Unknown) {
+          right->type_inf(new Boolean());
+        }
         type = new Boolean();
       }
       else {
@@ -164,6 +205,9 @@ public:
 
     else if(! strcmp(op, ":=")) {
       if(left->type_check(TYPE_Tref) && (right->type_check(left->getOfval()))) {
+        if(left->getOfval()==TYPE_Unknown) {
+          left->getType()->oftype = right->getType();
+        }
         type = new Unit();
       }
       else {
@@ -199,6 +243,9 @@ public:
 
     if(! strcmp(op, "+") || ! strcmp(op, "-")) {
       if(right->type_check(TYPE_Integer)) {
+        if(right->getVal()==TYPE_Unknown) {
+          right->type_inf(new Integer());
+        }
         type = new Integer();
       }
       else {
@@ -209,6 +256,9 @@ public:
 
     else if(! strcmp(op, "+.") || ! strcmp(op, "-.")) {
       if(right->type_check(TYPE_Real)) {
+        if(right->getVal()==TYPE_Unknown) {
+          right->type_inf(new Real());
+        }
         type = new Real();
       }
       else {
@@ -219,6 +269,9 @@ public:
 
     else if(! strcmp(op, "not")) {
       if(right->type_check(TYPE_Boolean)) {
+        if(right->getVal()==TYPE_Unknown) {
+          right->type_inf(new Boolean());
+        }
         type = new Boolean();
       }
       else {
@@ -246,6 +299,9 @@ public:
     exp->sem();
 
     if (exp->type_check(TYPE_Tref)) {
+      if(exp->getVal()==TYPE_Unknown) {
+          exp->type_inf(new Tref(new Tunknown()));
+        }
       type = new Unit();
     }
     else {
@@ -274,6 +330,9 @@ public:
     cond->sem();
 
     if (cond->type_check(TYPE_Boolean)) {
+      if(cond->getVal()==TYPE_Unknown) {
+          cond->type_inf(new Boolean());
+        }
       
       stmt1->sem();
       if (stmt2 != nullptr) {
@@ -282,18 +341,39 @@ public:
           fprintf(stderr, "Error: %s\n", "Type Mismatch between then and else statements!!!");
           exit(1);
         }
-        else {
-          type = stmt1->getType();
+        if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()!=TYPE_Unknown) {
+          stmt1->type_inf(stmt2->getType());
+        }
+        else if(stmt2->getVal()==TYPE_Unknown && stmt1->getVal()!=TYPE_Unknown) {
+          stmt2->type_inf(stmt1->getType());
+        }
+        // me nullptr taytizw tous typoys twn Symbolentries
+        else if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()==TYPE_Unknown) {
+          SymbolEntry* x1 = stmt1->inf_name();
+          SymbolEntry* x2 =  stmt2->inf_name();
+          x1->same.push_back(x2);
+          x2->same.push_back(x1);
         }
       }
-      else {
-        type = stmt1->getType();
-      }
+
+      type = stmt1->getType();
+    
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: %s\n", "Type Mismatch at If condition!!!");
         exit(1);
     }
+  }
+
+  virtual void type_inf(Type* t) override {
+    stmt1->type_inf(t);
+    if (stmt2 != nullptr) {
+      stmt2->type_inf(t);
+    }
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    return stmt1->inf_name();
   }
 
 private:
@@ -316,17 +396,25 @@ public:
     cond->sem();
 
     if (cond->type_check(TYPE_Boolean)) {
+      if(cond->getVal()==TYPE_Unknown) {
+        cond->type_inf(new Boolean());
+      }
+
       stmt1->sem();
       if (stmt1->type_check(TYPE_Unit)) {
+        if(stmt1->getVal()==TYPE_Unknown) {
+          stmt1->type_inf(new Unit());
+        }
+
         type = new Unit();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: %s\n", "Type Mismatch! Type of body of while is not unit.");
         exit(1);
       }
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: %s\n", "Type Mismatch! Type of condition of while is not boolean.");
         exit(1);
     }
   }
@@ -354,17 +442,27 @@ public:
     cond->sem();
     stmt1->sem();
     if (cond->type_check(TYPE_Integer) && stmt1->type_check(TYPE_Integer)) {
+      if(cond->getVal()==TYPE_Unknown) {
+        cond->type_inf(new Integer());
+      }
+      if(stmt1->getVal()==TYPE_Unknown) {
+        stmt1->type_inf(new Integer());
+      }
+
       stmt2->sem();
       if (stmt2->type_check(TYPE_Unit)) {
+        if(stmt2->getVal()==TYPE_Unknown) {
+          stmt2->type_inf(new Unit());
+        }
         type = new Unit();
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: %s\n", "Type Mismatch! Type of body of for is not unit.");
         exit(1);
       }
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        fprintf(stderr, "Error: %s\n", "Type Mismatch! Iteration limits of for don't both have type-integer.");
         exit(1);
     }
 
@@ -504,20 +602,20 @@ public:
     st.closeScope();
   }
 
-  void add_func(char* c, Type* t ,std::vector<Type*> vt) {
+  void add_func(char* c, Type* t ,std::vector<SymbolEntry*> vt) {
     st.insert(c, t, ENTRY_FUNCTION, vt);
   }
 
-  std::vector<Type*> create_v(Type* arg1) {
-    std::vector<Type*> vt;
-    vt.push_back(arg1);
+  std::vector<SymbolEntry*> create_v(Type* arg1) {
+    std::vector<SymbolEntry*> vt;
+    vt.push_back(new SymConstant(nullptr, arg1));
     return vt;
   }
 
-  std::vector<Type*> create_v2(Type* arg1, Type* arg2) {
-    std::vector<Type*> vt;
-    vt.push_back(arg1);
-    vt.push_back(arg2);
+  std::vector<SymbolEntry*> create_v2(Type* arg1, Type* arg2) {
+    std::vector<SymbolEntry*> vt;
+    vt.push_back(new SymConstant(nullptr, arg1));
+    vt.push_back(new SymConstant(nullptr, arg1));
     return vt;
   }
 
@@ -550,14 +648,16 @@ public:
     for (Type *t : tlist) {
       if(t->val==TYPE_Tid) {
         if(st.lookup(t->getID())==nullptr){
-          fprintf(stderr, "Error: %s\n", "Invalid Type1!!!");
+          fprintf(stderr, "Error: %s\n", "Invalid Type of programmer has not been previously defined!!!");
           exit(1);
         }
       }
     }
   }
 
-  std::vector<Type*> getVector() {
+  std::vector<SymbolEntry*> getVector() {
+    std::vector<SymbolEntry*> ss;
+    
     return tlist;
   }
 
@@ -687,7 +787,7 @@ private:
   Tdeflist *tdlist;
 };
 
-class Par: public AST {
+class Par: public Expr {
 public:
   Par(char *id, Type *t = nullptr):
     iden(id), tp(t) {}
@@ -715,7 +815,21 @@ public:
     else {
       return tp2;
     }
-  } 
+  }
+
+  virtual void type_inf(Type* t) override {
+    SymbolEntry* se;
+    se = st.lookup(iden);
+    if(se->getEType()==ENTRY_PARAMETER) {
+      se->changeType(t);
+    }
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    SymbolEntry* se;
+    se = st.lookup(iden);
+    return se;
+  }
 
 private:
   char *iden;
@@ -745,9 +859,9 @@ public:
     for (Par *p : plist) p->sem();
   }
 
-  std::vector<Type*> getPartypes() {
-    std::vector<Type*> tps;
-    for (Par *p : plist) tps.push_back(p->getType());
+  std::vector<SymbolEntry*> getPartypes() {
+    std::vector<SymbolEntry*> tps;
+    for (Par *p : plist) tps.push_back(p);
     return tps;
   }
 
@@ -794,7 +908,7 @@ public:
             st.insert(iden, tp, ENTRY_CONSTANT);
           }
           else {
-            fprintf(stderr, "Error: %s\n", "Type and value of constant do not match!!!");
+            fprintf(stderr, "Error: %s\n", "Type of value and type of constant do not match!!!");
             exit(1);
           }
         }
@@ -803,7 +917,7 @@ public:
       else {
         if(tp==nullptr) {
           
-          std::vector<Type*> vt;
+          std::vector<SymbolEntry*> vt;
           Type* t;
           st.openScope();
           plist->sem();
@@ -816,7 +930,7 @@ public:
           st.insert(iden, t, ENTRY_FUNCTION, vt);
         }
         else {
-          std::vector<Type*> vt;
+          std::vector<SymbolEntry*> vt;
           st.openScope();
           plist->sem();
           exp->sem();
@@ -880,7 +994,7 @@ public:
             }
           }
           else {
-            fprintf(stderr, "Error: %s\n", "Type and value of constant do not match!!!");
+            fprintf(stderr, "Error: %s\n", "Type of value and type of constant do not match!!!");
             exit(1);
           }
         }
@@ -897,7 +1011,7 @@ public:
             st.closeScope();
           }
           else {
-            std::vector<Type*> vt;
+            std::vector<SymbolEntry*> vt;
             vt = plist->getPartypes();
             st.closeScope();
             st.insert(iden, new Tunknown(), ENTRY_FUNCTION, vt);
@@ -918,7 +1032,7 @@ public:
             }
           }
           else {
-            std::vector<Type*> vt;
+            std::vector<SymbolEntry*> vt;
             vt = plist->getPartypes();
             st.closeScope();
             st.insert(iden, tp, ENTRY_FUNCTION, vt);
@@ -950,6 +1064,22 @@ public:
       }
     }
 
+  }
+
+  virtual void type_inf(Type* ty) {
+    SymbolEntry* se;
+    Entry_Type see;
+    se = st.lookup(iden);
+    see = se->getEType();
+    if((see==ENTRY_CONSTANT || see==ENTRY_FUNCTION || see==ENTRY_VARIABLE) && se->getType()->val==TYPE_Unknown) {
+      se->changeType(ty);
+    }
+  }
+
+  virtual SymbolEntry* inf_name()  {
+    SymbolEntry* se;
+    se = st.lookup(iden);
+    return se;
   }
 
 private:
@@ -1032,6 +1162,14 @@ public:
     st.closeScope();
   }
 
+  virtual void type_inf(Type* t) override {
+    expr->type_inf(t);
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    return expr->inf_name();
+  }
+
 
 private:
   Let *let;
@@ -1047,12 +1185,12 @@ public:
   }
 
   virtual void sem() {
-    if(tp1->val!=TYPE_Array){
+    if(tp1->val!=TYPE_Array && tp1->val!=TYPE_Unknown){
       tp1->sem();
       type = new Tref(tp1);
     }
     else{
-      fprintf(stderr, "Error: %s\n", " Invalid Type 2!!!");
+      fprintf(stderr, "Error: %s\n", " Invalid Type for memory allocation!!!");
       exit(1);
     }
   }
@@ -1103,6 +1241,9 @@ public:
     SymbolEntry* arr;
     arr = st.lookup(iden);
     if(arr!=nullptr && (arr->getEType()==ENTRY_VARIABLE || arr->getEType()==ENTRY_PARAMETER) && arr->getType()->type_check(TYPE_Array)){
+      if(arr->getType()->val==TYPE_Unknown) {
+        arr->changeType(new Array(new Tunknown(), INT8_MAX));
+      }
       if(ien>=1 && ien<=arr->getType()->size) {
       type = new Integer();
       }
@@ -1112,7 +1253,7 @@ public:
       }
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type 3!!!");
+      fprintf(stderr, "Error: %s\n", "Array of this name not found!!!");
       exit(1);
     }
     
@@ -1197,6 +1338,14 @@ public:
     type = exp->getType();
   }
 
+  virtual void type_inf(Type* t) override {
+    exp->type_inf(t);
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    return exp->inf_name();
+  }
+
 private:
   Expr *exp;  
 };
@@ -1255,7 +1404,7 @@ public:
       type = idd->getType();
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type 4!!!");
+      fprintf(stderr, "Error: %s\n", "This name has not been defined in the symbol table!!!");
       exit(1);
     }
   }
@@ -1265,9 +1414,23 @@ public:
     type = t;
   }
 
-  virtual char* getname() override {
-    return name;
+  virtual void type_inf(Type* t) override {
+    SymbolEntry* se;
+    se = st.lookup(name);
+    if (se->getEType()==ENTRY_VARIABLE) {
+      se->changeType(t->oftype);
+    }
+    else {
+      se->changeType(t);
+    }
   }
+
+  virtual SymbolEntry* inf_name() override {
+    SymbolEntry* se;
+    se = st.lookup(name);
+    return se;
+  }
+
 
 private:
   bool check;
@@ -1286,24 +1449,38 @@ public:
   virtual void sem() override{
     SymbolEntry* arr;
     arr = st.lookup(id);
-    fprintf(stderr, "ooo");
-    if(arr!=nullptr && (arr->getEType()==ENTRY_VARIABLE || arr->getEType()==ENTRY_PARAMETER ) && arr->getType()->type_check(TYPE_Array)){
-      fprintf(stderr, "here");
+    //Na ftiaksw to if
+    if(arr!=nullptr && (arr->getEType()==ENTRY_VARIABLE || arr->getEType()==ENTRY_PARAMETER ) && arr->getType()->type_check(TYPE_Array) && (elist->getSize()==arr->getType()->size || arr->getType()->size==INT8_MAX )) {
       elist->sem();
       for (Expr *e : elist->getExps()) {
-        if(e->getType()->val!=TYPE_Integer) {
-          fprintf(stderr, "Error: %s\n", "Invalid Type 5!!!");
+        if(!e->type_check(TYPE_Integer)) {
+          fprintf(stderr, "Error: %s\n", "Not every value of array's dimensions is of type-integer!!!");
           exit(1);
         }
       }
       type = new Tref(arr->getType()->oftype);
       }
     else {
-      fprintf(stderr, "Error: %s\n", "Not array!!!");
+      fprintf(stderr, "Error: %s\n", "Array of this name and dimensions cannot be found!!!");
       exit(1);
     }
-    
   }
+
+  virtual void type_inf(Type* t) override {
+    SymbolEntry* se;
+    se = st.lookup(id);
+    if(t->val==TYPE_Tref) {
+      se->getType()->oftype = t->oftype;
+    }
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    SymbolEntry* se;
+    se = st.lookup(id);
+    return se;
+  }
+
+
 
 private:
   char *id;
@@ -1321,17 +1498,25 @@ public:
 
   virtual void sem() override {
     vexp->sem();
-    if(vexp->getType()->type_check(TYPE_Tref)) {
+    if(vexp->type_check(TYPE_Tref)) {
+      if(vexp->getVal()==TYPE_Unknown) {
+        vexp->type_inf(new Tref(new Tunknown()));
+      }
       type = vexp->getType()->oftype;
     }
     else{
-      fprintf(stderr, "Error: %s\n", "Invalid Type 6!!!");
+      fprintf(stderr, "Error: %s\n", "Expression should be a reference but it isn't!!!");
       exit(1);
     }
 }
 
-  virtual char* getname() override {
-    return vexp->getname();
+  virtual void type_inf(Type* t) override {
+    
+    vexp->type_inf(new Tref(t));
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    return vexp->inf_name();
   }
 
 private:
@@ -1385,7 +1570,7 @@ public:
     if(idd!=nullptr && (idd->getEType()==ENTRY_FUNCTION || idd->getEType()==ENTRY_CONSTRUCTOR)){
       list->sem();
       std::vector<Valexpr*> ves;
-      std::vector<Type*> vtypes;
+      std::vector<SymbolEntry*> vtypes;
       std::vector<Type*> argtypes;
       vtypes = idd->getVector();
       ves = list->getVexps();
@@ -1397,9 +1582,15 @@ public:
         exit(1);
       }
       for (int i=0; i<int(argtypes.size()); i++) {
-        if(!(vtypes[i]->type_check(argtypes[i]->val))){
-          fprintf(stderr, "Error: %s\n", "Not valid 5types!!!");
+        if(!(vtypes[i]->getType()->type_check(argtypes[i]->val))){
+          fprintf(stderr, "Error: %s\n", "Not matching parameter and argument types!!!");
           exit(1);
+        }
+        else {
+          if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->val!=TYPE_Unknown) {
+            ves[i]->type_inf(vtypes[i]->getType());
+          }
+          
         }
       }
       type = idd->getType();
@@ -1409,6 +1600,18 @@ public:
       fprintf(stderr, "Error: %s\n", "Not function or constructor!!!");
       exit(1);
     }
+  }
+
+  virtual void type_inf(Type* t) override {
+    SymbolEntry* se;
+    se = st.lookup(id);
+    se->changeType(t);
+  }
+
+  virtual SymbolEntry* inf_name() override {
+    SymbolEntry* se;
+    se = st.lookup(id);
+    return se;
   }
 
 private:
@@ -1605,23 +1808,32 @@ public:
     exp->sem();
     if(exp->type_check(TYPE_Tid)) {
       SymbolEntry* exist;
-      exist = st.lookup(exp->getType()->getID());
-      
-      while (exist!=nullptr && !(exist->getEType()==ENTRY_TYPE)) {
-        exist = exist->getNext();
-      }
 
-      if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
-        clist->sem(exp->getType());
-        type = clist->getctype();
+      if(exp->getType()->val!=TYPE_Unknown) {
+        exist = st.lookup(exp->getType()->getID());
+        
+        while (exist!=nullptr && !(exist->getEType()==ENTRY_TYPE)) {
+          exist = exist->getNext();
+        }
+
+        if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
+          clist->sem(exp->getType());
+          type = clist->getctype();
+        }
+        else {
+          fprintf(stderr, "Error: %s\n", "Not found a type of this name by the programmer!!!");
+          exit(1);
+        }
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Not 13valid 1type!!!");
+        fprintf(stderr, "Error: %s\n", "Expression is not of a programmer-defined type!!!");
         exit(1);
-      }
+
+
+    }
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Not 14valid 2type!!!");
+        fprintf(stderr, "Error: %s\n", "Expression is not of a programmer-defined type!!!");
         exit(1);
     }
   }

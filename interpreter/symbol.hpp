@@ -36,15 +36,17 @@ class SymbolEntry {
 
     virtual void changeType(Type* t) {}
 
-    virtual std::vector<Type*> getVector() {
-      std::vector<Type*> vt;
+    virtual std::vector<SymbolEntry*> getVector() {
+      std::vector<SymbolEntry*> vt;
       return vt;
     }
 
+    std::vector<SymbolEntry* > same;
 
   protected:
     Entry_Type entry_type;
     SymbolEntry *next;
+    
 
 };
 
@@ -63,7 +65,13 @@ class SymVariable: public SymbolEntry {
   }
 
   virtual void changeType(Type* t) override {
-    type = t;
+    type->oftype = t;
+    for (SymbolEntry* s : same) {
+      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    }
+
   } 
 
     Type* type;
@@ -79,7 +87,16 @@ class SymConstant: public SymbolEntry {
 
     virtual Type* getType() override {
       return type;
-    }  
+    }
+
+    virtual void changeType(Type* t) override {
+      type = t;
+      for (SymbolEntry* s : same) {
+      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    }
+    }
 
     Type* type;
 };
@@ -94,7 +111,8 @@ class SymType: public SymbolEntry {
 
     virtual Type* getType() override {
       return type;
-    }  
+    }
+  
 
     Type* type;
   
@@ -102,7 +120,7 @@ class SymType: public SymbolEntry {
 
 class SymFunction: public SymbolEntry {
   public:
-    SymFunction(SymbolEntry *n, std::vector<Type*> vt, Type* t) {
+    SymFunction(SymbolEntry *n, std::vector<SymbolEntry*> vt, Type* t) {
       entry_type = ENTRY_FUNCTION;
       next = n;
       par_type = vt;
@@ -113,14 +131,23 @@ class SymFunction: public SymbolEntry {
       return res_type;
     }
 
-    std::vector<Type*> getVector() override {
+    std::vector<SymbolEntry*> getVector() override {
       return par_type;
+    }
+
+    virtual void changeType(Type* t) override {
+      res_type = t;
+      for (SymbolEntry* s : same) {
+      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    }
     }
 
     Type* res_type;
 
   private:
-    std::vector<Type*> par_type;
+    std::vector<SymbolEntry*> par_type;
 };
 
 class SymIdentifier: public SymbolEntry {
@@ -135,12 +162,21 @@ class SymIdentifier: public SymbolEntry {
       return type;
     }
 
+    virtual void changeType(Type* t) override {
+      type = t;
+      for (SymbolEntry* s : same) {
+      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    }
+    }
+
     Type* type;
 };
 
 class SymConstructor: public SymbolEntry {
   public:
-    SymConstructor(SymbolEntry *n, std::vector<Type*> vt, Type* t) {
+    SymConstructor(SymbolEntry *n, std::vector<SymbolEntry*> vt, Type* t) {
       entry_type = ENTRY_CONSTRUCTOR;
       next = n;
       par_type = vt;
@@ -151,14 +187,23 @@ class SymConstructor: public SymbolEntry {
       return res_type;
     }
 
-    std::vector<Type*> getVector() override {
+    std::vector<SymbolEntry*> getVector() override {
       return par_type;
+    }
+
+    virtual void changeType(Type* t) override {
+      res_type = t;
+      for (SymbolEntry* s : same) {
+      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    }
     }
 
     Type* res_type;
 
   private:
-    std::vector<Type*> par_type;
+    std::vector<SymbolEntry*> par_type;
 };
 
 class SymParameter: public SymbolEntry {
@@ -171,6 +216,15 @@ class SymParameter: public SymbolEntry {
 
     virtual Type* getType() override {
       return type;
+    }
+
+    virtual void changeType(Type* t) override {
+      type = t;
+      for (SymbolEntry* s : same) {
+      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    }
     }
 
     Type* type;
@@ -208,7 +262,7 @@ public:
     }
     return (locals[c]);  // Return pointer to the new entry
   }
-  SymbolEntry *insert(std::string c, Type* rt, SymbolEntry *n, Entry_Type etype, std::vector<Type*> vt) {
+  SymbolEntry *insert(std::string c, Type* rt, SymbolEntry *n, Entry_Type etype, std::vector<SymbolEntry*> vt) {
     if (locals.find(c) != locals.end()) {  
       std::cerr << ("Duplicate entry " + c + " in this scope!!!") << std::endl;  // Print error message
       exit(1);
@@ -259,7 +313,7 @@ public:
     else n = globals[str];  // else point to it
     globals[str] = scopes.back()->insert(str, t, n, etype); // Insert SymbolEntry to top Scope
   }
-  void insert(char* c, Type* t, Entry_Type etype ,std::vector<Type*> vt) {
+  void insert(char* c, Type* t, Entry_Type etype ,std::vector<SymbolEntry*> vt) {
     SymbolEntry *n;  // Pointer to next variable with the same name
     std::string str(c);
     if (globals.find(str) == globals.end()) n = nullptr;  // If it doesn't exist point to nullptr

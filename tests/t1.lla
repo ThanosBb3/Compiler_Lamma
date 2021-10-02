@@ -1,5 +1,5 @@
-let mutable x
+let mutable x [1,2]
 
-let z = !x + 4
+let fun a b = a == b
 
-let y = !x +. 4.5
+let g = fun x 2

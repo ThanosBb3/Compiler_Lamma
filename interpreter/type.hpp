@@ -26,6 +26,7 @@ class Type : public AST {
     else return false;
   }
 
+
     Types val;
     Type *oftype;
     int size;
@@ -149,6 +150,7 @@ public:
     if(size>=0) out << " and size " << size;
     out << " )";
   }
+
 
 };
 
