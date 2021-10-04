@@ -625,14 +625,14 @@ public:
 
   std::vector<SymbolEntry*> create_v(Type* arg1) {
     std::vector<SymbolEntry*> vt;
-    vt.push_back(new SymConstant(nullptr, arg1));
+    vt.push_back(new SymParameter(nullptr, arg1));
     return vt;
   }
 
   std::vector<SymbolEntry*> create_v2(Type* arg1, Type* arg2) {
     std::vector<SymbolEntry*> vt;
-    vt.push_back(new SymConstant(nullptr, arg1));
-    vt.push_back(new SymConstant(nullptr, arg1));
+    vt.push_back(new SymParameter(nullptr, arg1));
+    vt.push_back(new SymParameter(nullptr, arg1));
     return vt;
   }
 
@@ -1745,6 +1745,22 @@ public:
     return ve->getType();
   }
 
+  Type* getpre() {
+    Type* ret;
+    if(ve!=nullptr){
+      st.openScope();
+      ve->sem(new Tunknown());
+      ret = ve->getType();
+      st.closeScope();
+    }
+    else {
+      SymbolEntry* con;
+      con = st.lookup(id);
+      ret = con->getType();
+    }
+    return ret;
+  }
+
 private:
   Valexpr *ve;
   char *id;
@@ -1783,6 +1799,11 @@ public:
     pat->sem(t);
     exp->sem();
     st.closeScope();
+  }
+
+  Type* getpatt() {
+    
+    return pat->getpre();
   }
 
   Type* getetype() {
@@ -1833,6 +1854,19 @@ public:
   Type* getctype() {
     return clist[0]->getetype();
   }
+
+  Type* checkpat() {
+    Type* tt;
+    for(Clause* c : clist) {
+      
+      tt = c->getpatt();
+      
+      if(tt->val!=TYPE_Unknown){
+        return tt;
+      } 
+    }
+    return nullptr; 
+  }
   
 private:
   std::vector<Clause *> clist;
@@ -1850,31 +1884,70 @@ public:
 
   virtual void sem() override {
     exp->sem();
-    if(exp->type_check(TYPE_Tid)) {
+    if(exp->type_check(TYPE_Tid) || exp->type_check(TYPE_Integer) || exp->type_check(TYPE_Real) || exp->type_check(TYPE_Boolean) || exp->type_check(TYPE_Char) ) {
       SymbolEntry* exist;
 
       if(exp->getType()->val!=TYPE_Unknown) {
-        exist = st.lookup(exp->getType()->getID());
+
+        if(exp->getType()->val==TYPE_Tid){
+          exist = st.lookup(exp->getType()->getID());
         
-        while (exist!=nullptr && !(exist->getEType()==ENTRY_TYPE)) {
-          exist = exist->getNext();
+        
+          while (exist!=nullptr && !(exist->getEType()==ENTRY_TYPE)) {
+            exist = exist->getNext();
+          }
+
+          if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
+            clist->sem(exp->getType());
+            type = clist->getctype();
+          }
+          else {
+            fprintf(stderr, "Error: %s\n", "Not found a type of this name by the programmer!!!");
+            exit(1);
+          }
         }
 
-        if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
+        else{
           clist->sem(exp->getType());
           type = clist->getctype();
         }
-        else {
-          fprintf(stderr, "Error: %s\n", "Not found a type of this name by the programmer!!!");
-          exit(1);
-        }
       }
       else {
-        fprintf(stderr, "Error: %s\n", "Expression is not of a programmer-defined type!!!");
-        exit(1);
+        // an to expr exei type_unknown
+        Type* tt;
+        tt = clist->checkpat();
+        if(tt!=nullptr){
+          exp->type_inf(tt);
+          if(tt->val==TYPE_Tid){
+            exist = st.lookup(tt->getID());
+          
+          
+            while (exist!=nullptr && !(exist->getEType()==ENTRY_TYPE)) {
+              exist = exist->getNext();
+            }
+
+            if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
+              clist->sem(tt);
+              type = clist->getctype();
+            }
+            else {
+              fprintf(stderr, "Error: %s\n", "Not found a type of this name by the programmer!!!");
+              exit(1);
+            }
+          }
+
+          else{
+            clist->sem(tt);
+            type = clist->getctype();
+          }
+        }
+        else {
+          fprintf(stderr, "Error: all patterns of type unknown");
+          exit(1);
+        }
 
 
-    }
+      }
     }
     else {
         fprintf(stderr, "Error: %s\n", "Expression is not of a programmer-defined type here!!!");
