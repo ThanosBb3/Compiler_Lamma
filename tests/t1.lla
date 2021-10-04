@@ -4,5 +4,4 @@ let g = fun 1 2
 
 let j = fun 1.2 2.7
 
-let b = fun 'a' 3
-
+let b = fun 'a' 'b'

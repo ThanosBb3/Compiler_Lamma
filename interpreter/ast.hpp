@@ -150,12 +150,16 @@ public:
         else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
           right->type_inf(left->getType());
         }
-        // me nullptr taytizw tous typoys twn Symbolentries
+        
         else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
           SymbolEntry* x1 = left->inf_name();
           SymbolEntry* x2 =  right->inf_name();
           x1->same.push_back(x2);
           x2->same.push_back(x1);
+          x1->illegal.push_back(TYPE_Array);
+          x2->illegal.push_back(TYPE_Array);
+          x1->illegal.push_back(TYPE_Tfun);
+          x2->illegal.push_back(TYPE_Tfun);
         }
         type = new Boolean();
       }
@@ -173,12 +177,24 @@ public:
         else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
           right->type_inf(left->getType());
         }
-        // me nullptr taytizw tous typoys twn Symbolentries
+        
         else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
           SymbolEntry* x1 = left->inf_name();
           SymbolEntry* x2 =  right->inf_name();
           x1->same.push_back(x2);
           x2->same.push_back(x1);
+          x1->illegal.push_back(TYPE_Array);
+          x2->illegal.push_back(TYPE_Array);
+          x1->illegal.push_back(TYPE_Tfun);
+          x2->illegal.push_back(TYPE_Tfun);
+          x1->illegal.push_back(TYPE_Boolean);
+          x2->illegal.push_back(TYPE_Boolean);
+          x1->illegal.push_back(TYPE_Unit);
+          x2->illegal.push_back(TYPE_Unit);
+          x1->illegal.push_back(TYPE_Tref);
+          x2->illegal.push_back(TYPE_Tref);
+          x1->illegal.push_back(TYPE_Tid);
+          x2->illegal.push_back(TYPE_Tid);
         }
         type = new Boolean();
       }
@@ -1620,6 +1636,7 @@ public:
           }
         }
       }
+      for (SymbolEntry* v : vtypes) {delete v;}
       idd->changeVector(copy);
 
     }
@@ -1860,7 +1877,7 @@ public:
     }
     }
     else {
-        fprintf(stderr, "Error: %s\n", "Expression is not of a programmer-defined type!!!");
+        fprintf(stderr, "Error: %s\n", "Expression is not of a programmer-defined type here!!!");
         exit(1);
     }
   }
