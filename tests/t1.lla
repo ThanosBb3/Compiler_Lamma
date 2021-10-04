@@ -1,5 +1,8 @@
-let mutable x [1,2]
-
 let fun a b = a == b
 
-let g = fun x 2
+let g = fun 1 2
+
+let j = fun 1.2 2.7
+
+let b = fun 'a' 3
+

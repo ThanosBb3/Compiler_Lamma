@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <algorithm>
 #include <map>
 #include <vector>
 #include <list>
@@ -657,8 +658,8 @@ public:
 
   std::vector<SymbolEntry*> getVector() {
     std::vector<SymbolEntry*> ss;
-    
-    return tlist;
+    for(Type* t : tlist) ss.push_back(new SymConstant(nullptr, t));
+    return ss;
   }
 
 private:
@@ -684,7 +685,7 @@ public:
       st.insert(iden, t, ENTRY_CONSTRUCTOR, tlist->getVector());
     }
     else {
-      std::vector<Type*> vt;
+      std::vector<SymbolEntry*> vt;
       st.insert(iden, t, ENTRY_CONSTRUCTOR, vt);
     }
   }
@@ -817,6 +818,12 @@ public:
     }
   }
 
+  SymbolEntry* getme() {
+    SymbolEntry* s;
+    s = st.lookup(iden);
+    return s;
+  }
+
   virtual void type_inf(Type* t) override {
     SymbolEntry* se;
     se = st.lookup(iden);
@@ -861,7 +868,7 @@ public:
 
   std::vector<SymbolEntry*> getPartypes() {
     std::vector<SymbolEntry*> tps;
-    for (Par *p : plist) tps.push_back(p);
+    for (Par *p : plist) tps.push_back(p->getme());
     return tps;
   }
 
@@ -1571,8 +1578,12 @@ public:
       list->sem();
       std::vector<Valexpr*> ves;
       std::vector<SymbolEntry*> vtypes;
+      std::vector<SymbolEntry*> copy;
       std::vector<Type*> argtypes;
       vtypes = idd->getVector();
+      for (SymbolEntry* se : vtypes) {
+        copy.push_back(se->copy());
+      }
       ves = list->getVexps();
       for (Valexpr *v: ves) {
         argtypes.push_back(v->getType());
@@ -1587,13 +1598,29 @@ public:
           exit(1);
         }
         else {
-          if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->val!=TYPE_Unknown) {
+          if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->getType()->val!=TYPE_Unknown) {
             ves[i]->type_inf(vtypes[i]->getType());
           }
+          if(argtypes[i]->val!=TYPE_Unknown && vtypes[i]->getType()->val==TYPE_Unknown) {
+            vtypes[i]->changeType(argtypes[i]);
+            
+          }
+          
           
         }
       }
       type = idd->getType();
+      for (int j=0; j<int(vtypes.size()); j++) {
+        for (SymbolEntry* s : vtypes[j]->same) {
+          if(std::find(vtypes.begin(), vtypes.end(), s) != vtypes.end()) {
+            copy[j]->same.push_back(s->getNext());
+          }
+          else {
+            copy[j]->same.push_back(s);
+          }
+        }
+      }
+      idd->changeVector(copy);
 
     }
     else {
@@ -1674,7 +1701,7 @@ public:
       SymbolEntry* con;
       con = st.lookup(id);
       if(con!=nullptr && con->getType()->val==t->val) {
-        std::vector<Type*> vtypes;
+        std::vector<SymbolEntry*> vtypes;
         vtypes = con->getVector();
         velist->sem();
         std::vector<Valexpr*> ves;
@@ -1688,7 +1715,7 @@ public:
         exit(1);
       }
       for (int i=0; i<int(argtypes.size()); i++) {
-        if(vtypes[i]->val!=argtypes[i]->val){
+        if(vtypes[i]->getType()->val!=argtypes[i]->val){
           fprintf(stderr, "Error: %s\n", "Not 11valid types!!!");
           exit(1);
         }

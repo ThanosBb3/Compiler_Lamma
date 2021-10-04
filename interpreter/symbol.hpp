@@ -36,6 +36,12 @@ class SymbolEntry {
 
     virtual void changeType(Type* t) {}
 
+    virtual void changeVector(std::vector<SymbolEntry*> cv) {}
+
+    virtual SymbolEntry* copy() {
+      return nullptr;
+    }
+
     virtual std::vector<SymbolEntry*> getVector() {
       std::vector<SymbolEntry*> vt;
       return vt;
@@ -144,6 +150,10 @@ class SymFunction: public SymbolEntry {
     }
     }
 
+    virtual void changeVector(std::vector<SymbolEntry*> cv) override {
+      par_type = cv;
+    }
+
     Type* res_type;
 
   private:
@@ -218,10 +228,16 @@ class SymParameter: public SymbolEntry {
       return type;
     }
 
+    virtual SymbolEntry* copy() override {
+      SymbolEntry* se =  new SymParameter(next, type);
+      next = se;
+      return se;
+    }
+
     virtual void changeType(Type* t) override {
       type = t;
       for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr && s->getType()->oftype->val==TYPE_Unknown)) {
         s->changeType(t);
       }
     }
