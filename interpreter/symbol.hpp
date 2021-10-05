@@ -8,6 +8,23 @@
 #include "AST_main.hpp"
 #include "type.hpp"
 
+inline const char* ToString(Type* t)
+{
+    switch (t->val)
+    {
+        case TYPE_Unit:   return "unit";
+        case TYPE_Integer:   return "int";
+        case TYPE_Char: return "char";
+        case TYPE_Boolean:   return "bool";
+        case TYPE_Real:   return "real";
+        case TYPE_Array: return "array";
+        case TYPE_Tref: return "reference";
+        case TYPE_Unknown:   return "unknown";
+        case TYPE_Tid: return t->getID();
+        default:      return "never coming here";
+    }
+}
+
 enum Entry_Type { 
        ENTRY_CONSTANT,
        ENTRY_FUNCTION,
@@ -78,7 +95,7 @@ class SymVariable: public SymbolEntry {
     }
     type->oftype = t;
     for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+      if (s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)){
         s->changeType(t);
       }
     }
@@ -107,7 +124,7 @@ class SymConstant: public SymbolEntry {
       }
       type = t;
       for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
         s->changeType(t);
       }
     }
@@ -151,16 +168,17 @@ class SymFunction: public SymbolEntry {
     }
 
     virtual void changeType(Type* t) override {
+      
       if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
         fprintf(stderr, "Error! Not valid type here.\n");
         exit(1);
       }
       res_type = t;
       for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
-        s->changeType(t);
+        if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
+          s->changeType(t);
+        }
       }
-    }
     }
 
     virtual void changeVector(std::vector<SymbolEntry*> cv) override {
@@ -192,7 +210,7 @@ class SymIdentifier: public SymbolEntry {
       }
       type = t;
       for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
         s->changeType(t);
       }
     }
@@ -225,7 +243,7 @@ class SymConstructor: public SymbolEntry {
       }
       res_type = t;
       for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || s->getType()->oftype->val==TYPE_Unknown) {
+      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
         s->changeType(t);
       }
     }

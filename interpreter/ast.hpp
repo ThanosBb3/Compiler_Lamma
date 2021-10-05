@@ -10,21 +10,7 @@
 #include "type.hpp"
 #include "symbol.hpp"
 
-inline const char* ToString(Type* t)
-{
-    switch (t->val)
-    {
-        case TYPE_Unit:   return "unit";
-        case TYPE_Integer:   return "int";
-        case TYPE_Char: return "char";
-        case TYPE_Boolean:   return "bool";
-        case TYPE_Real:   return "real";
-        case TYPE_Array: return "array";
-        case TYPE_Tref: return "reference";
-        case TYPE_Unknown:   return "unknown";
-        default:      return "never coming here";
-    }
-}
+
 
 class Expr: public AST {
 public:
@@ -352,8 +338,11 @@ public:
         }
       
       stmt1->sem();
+      
       if (stmt2 != nullptr) {
+        
         stmt2->sem();
+        
         if (!(stmt1->type_check(stmt2->getVal()))) {
           fprintf(stderr, "Error: %s\n", "Type Mismatch between then and else statements!!!");
           exit(1);
@@ -364,7 +353,7 @@ public:
         else if(stmt2->getVal()==TYPE_Unknown && stmt1->getVal()!=TYPE_Unknown) {
           stmt2->type_inf(stmt1->getType());
         }
-        // me nullptr taytizw tous typoys twn Symbolentries
+        
         else if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()==TYPE_Unknown) {
           SymbolEntry* x1 = stmt1->inf_name();
           SymbolEntry* x2 =  stmt2->inf_name();
@@ -674,7 +663,7 @@ public:
 
   std::vector<SymbolEntry*> getVector() {
     std::vector<SymbolEntry*> ss;
-    for(Type* t : tlist) ss.push_back(new SymConstant(nullptr, t));
+    for(Type* t : tlist) ss.push_back(new SymParameter(nullptr, t));
     return ss;
   }
 
@@ -749,10 +738,19 @@ public:
     out << "Tdef(" << iden << ", " << *clist << ")"; 
   }
 
-  virtual void sem() override {
-    Type* t = new Typeid(iden);
-    st.insert(iden, t, ENTRY_TYPE);
-    clist->sem(t);
+  virtual void sem(bool b) override {
+    if(b) {
+      Type* t = new Typeid(iden);
+      st.insert(iden, t, ENTRY_TYPE);
+    }
+    else{
+      SymbolEntry* t;
+      t = st.lookup(iden);
+      while(t->getEType()!=ENTRY_TYPE){
+        t = t->getNext();
+      }
+      clist->sem(t->getType());
+    }
   }
 
 private:
@@ -779,7 +777,9 @@ public:
   void append(Tdef *tt) { dlist.push_back(tt); size++;}
   
   virtual void sem() override{
-    for (Tdef *d : dlist) d->sem();
+    for (Tdef *d : dlist) d->sem(true);
+    for (Tdef *d : dlist) d->sem(false);
+
   }
 
 private:
@@ -1416,8 +1416,12 @@ public:
   Id(bool b, char *s): check(b), name(s) {}
   ~Id() { delete name; }
   virtual void printOn(std::ostream &out) const override { 
-    if (check) out << "ConstrId" << "(" << name << ")";
-    out << "Id" << "(" << name << ")";
+    if (check) {
+      out << "ConstrId" << "(" << name << ")";
+    }
+    else {
+      out << "Id" << "(" << name << ")";
+    }
   }
 
   virtual void sem() override {
@@ -1590,7 +1594,7 @@ public:
   virtual void sem() override {
     SymbolEntry* idd;
     idd = st.lookup(id);
-    if(idd!=nullptr && (idd->getEType()==ENTRY_FUNCTION || idd->getEType()==ENTRY_CONSTRUCTOR)){
+    if(idd!=nullptr && idd->getEType()==ENTRY_FUNCTION){
       list->sem();
       std::vector<Valexpr*> ves;
       std::vector<SymbolEntry*> vtypes;
@@ -1639,6 +1643,33 @@ public:
       for (SymbolEntry* v : vtypes) {delete v;}
       idd->changeVector(copy);
 
+    }
+    else if(idd!=nullptr && idd->getEType()==ENTRY_CONSTRUCTOR) {
+      list->sem();
+      std::vector<Valexpr*> ves;
+      std::vector<SymbolEntry*> vtypes;
+      std::vector<Type*> argtypes;
+      vtypes = idd->getVector();
+      ves = list->getVexps();
+      for (Valexpr *v: ves) {
+        argtypes.push_back(v->getType());
+      }
+      if(vtypes.size()!=argtypes.size()){
+        fprintf(stderr, "Error: %s\n", "Unequal sizes!!!");
+        exit(1);
+      }
+      for (int i=0; i<int(argtypes.size()); i++) {
+        if(!(vtypes[i]->getType()->type_check(argtypes[i]->val))){
+          fprintf(stderr, "Error: %s\n", "Not matching parameter and argument types!!!");
+          exit(1);
+        }
+        else {
+          if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->getType()->val!=TYPE_Unknown) {
+            ves[i]->type_inf(vtypes[i]->getType());
+          }          
+        }
+      }
+      type = idd->getType();
     }
     else {
       fprintf(stderr, "Error: %s\n", "Not function or constructor!!!");
@@ -1720,10 +1751,10 @@ public:
       if(con!=nullptr && con->getType()->val==t->val) {
         std::vector<SymbolEntry*> vtypes;
         vtypes = con->getVector();
-        velist->sem();
         std::vector<Valexpr*> ves;
         std::vector<Type*> argtypes;
         ves = velist->getVexps();
+        for (int i=0; i<int(vtypes.size()); i++) { ves[i]->sem(vtypes[i]->getType()); }
         for (Valexpr *v: ves) {
           argtypes.push_back(v->getType());
         }
@@ -1814,6 +1845,10 @@ public:
     return exp->getType()->val;
   }
 
+  virtual void type_inf(Type* t) {
+    exp->type_inf(t);
+  }
+
 private:
   Pattern *pat;
   Expr *exp;
@@ -1839,15 +1874,25 @@ public:
   void append(Clause *cc) { clist.push_back(cc); size++;}
 
   virtual void sem(Type* t) override {
-    Types check;
-    clist[0]->sem(t);
-    check = clist[0]->getVal();
+    Type* check;
+    int j = 0;
+    
+    clist[j]->sem(t);
+    check = clist[j]->getetype();
+    while(check->val==TYPE_Unknown && j<size) {
+      clist[j]->sem(t);
+      check = clist[j]->getetype();
+      j += 1;
+    }
     for (Clause *c : clist) {
-      c->sem(t);
-      if(c->getVal()!=check){
-        fprintf(stderr, "Error: %s\n", "Not 12valid 3types!!!");
-        exit(1);
-      }
+        c->sem(t);
+        if(!(c->getetype()->type_check(check->val))){
+          fprintf(stderr, "Error: %s\n", "Not 12valid 3types!!!");
+          exit(1);
+        }
+        if(c->getVal()==TYPE_Unknown) {
+          c->type_inf(check);
+        }
     }
   }
 
@@ -1908,6 +1953,7 @@ public:
         }
 
         else{
+          
           clist->sem(exp->getType());
           type = clist->getctype();
         }
@@ -1927,6 +1973,7 @@ public:
             }
 
             if(exist!=nullptr && exist->getEType()==ENTRY_TYPE) {
+              
               clist->sem(tt);
               type = clist->getctype();
             }
@@ -1940,6 +1987,7 @@ public:
             clist->sem(tt);
             type = clist->getctype();
           }
+          
         }
         else {
           fprintf(stderr, "Error: all patterns of type unknown");
