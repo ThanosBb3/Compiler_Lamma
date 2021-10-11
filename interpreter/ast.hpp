@@ -10,7 +10,44 @@
 #include "type.hpp"
 #include "symbol.hpp"
 
+enum OPS { plus, minus, mul, diva, mod, fplus, fminus, fmul, fdiv, power, eq, neq, deq, dneq, lt, leq, gt, geq, anda, ora, ref, er, nota };
 
+static inline llvm::Type *translateType(Type* type)
+{
+	llvm::Type *ret;
+	switch (type->val)
+	{
+	case TYPE_Integer:
+	{
+		ret = llvm::Type::getInt32Ty(TheContext);
+		break;
+	}
+	case TYPE_Boolean:
+	{
+		ret = llvm::Type::getInt1Ty(TheContext);
+		break;
+	}
+	case TYPE_Char:
+	{
+		ret = llvm::Type::getInt8Ty(TheContext);
+		break;
+	}
+	case TYPE_Unit:
+	{
+		ret = llvm::Type::getVoidTy(TheContext);
+		break;
+	}
+  case TYPE_Real:
+	{
+		ret = llvm::Type::getFloatTy(TheContext);
+		break;
+	}
+
+	default:
+		break;
+	}
+	return ret;
+}
 
 class Expr: public AST {
 public:
@@ -44,6 +81,10 @@ public:
     return nullptr;
   }
 
+  virtual void changeType(Type* t) {
+    type = t;
+  }
+
 
 protected:
   Type *type;  
@@ -71,6 +112,11 @@ public:
     for (Expr *e : elist) e->sem();
   }
 
+  virtual llvm::Value* compile() override {
+    for (Expr *e : elist) e->compile();
+    return nullptr;
+  }
+
   int getSize() {
     return size;
   }
@@ -86,206 +132,468 @@ private:
 
 class Binop: public Expr {
 public:
-  Binop(Expr *l, const char *o, Expr *r): left(l), op(o), right(r) {}
-  ~Binop() { delete left; delete op; delete right; }
+  Binop(Expr *l, OPS o, Expr *r): left(l), op(o), right(r) {}
+  ~Binop() { delete left; delete right; }
   virtual void printOn(std::ostream &out) const override {
-    out << op << "(" << *left << ", " << *right << ")";
+    out <<  "(" << *left << ", " << *right << ")";
   }
 
   virtual void sem() override {
     left->sem();
     right->sem();
 
-    if(! strcmp(op, "+") || ! strcmp(op, "-") || ! strcmp(op, "*") || ! strcmp(op, "/") || ! strcmp(op, "mod")) {
-      if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
-        if(left->getVal()==TYPE_Unknown) {
-          left->type_inf(new Integer());
+    switch(op) {
+      case plus: case minus: case mul: case diva: case mod:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          if(left->getVal()==TYPE_Unknown) {
+            left->changeType(new Integer());
+            left->type_inf(left->getType());
+          }
+          if(right->getVal()==TYPE_Unknown) {
+            right->changeType(new Integer());
+            right->type_inf(right->getType());
+          }
+          type = new Integer();
         }
-        if(right->getVal()==TYPE_Unknown) {
-          right->type_inf(new Integer());
+        else {
+          fprintf(stderr, "Error: Type Mismatch! Expected two integers and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
+          exit(1);
         }
-        type = new Integer();
-      }
-      else {
-        fprintf(stderr, "Error: Type Mismatch! Expected two integers and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
-        exit(1);
-      }
-    }
+        break;
 
-    else if(! strcmp(op, "+.") || ! strcmp(op, "-.") || ! strcmp(op, "*.") || ! strcmp(op, "/.") || ! strcmp(op, "**")) {
-      if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
-        if(left->getVal()==TYPE_Unknown) {
-          left->type_inf(new Real());
+      case fplus: case fminus: case fmul: case fdiv: case power:
+        if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          if(left->getVal()==TYPE_Unknown) {
+            left->changeType(new Real());
+            left->type_inf(left->getType());
+          }
+          if(right->getVal()==TYPE_Unknown) {
+            right->changeType(new Real());
+            right->type_inf(right->getType());
+          }
+          type = new Real();
         }
-        if(right->getVal()==TYPE_Unknown) {
-          right->type_inf(new Real());
+        else {
+          fprintf(stderr, "Error: Type Mismatch! Expected two reals and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
+          exit(1);
         }
-        type = new Real();
-      }
-      else {
-        fprintf(stderr, "Error: Type Mismatch! Expected two reals and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
-        exit(1);
-      }
-    }
+        break;
 
-    else if(! strcmp(op, "=") || ! strcmp(op, "<>") || ! strcmp(op, "==") || ! strcmp(op, "!=")) {
-      if(!(left->getVal()==TYPE_Array) && !(left->getVal()==TYPE_Tfun) && (left->type_check(right->getVal()))) {
-        if(left->getVal()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
-          left->type_inf(right->getType());
+      case eq: case neq: case deq: case dneq:
+        if(!(left->getVal()==TYPE_Array) && !(left->getVal()==TYPE_Tfun) && !(left->getVal()==TYPE_Tref) && (left->type_check(right->getVal()))) {
+          if(left->getVal()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
+            left->changeType(right->getType());
+            left->type_inf(right->getType());
+          }
+          else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
+            right->changeType(left->getType());
+            right->type_inf(left->getType());
+          }
+          
+          else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
+            //fix expr types here
+            SymbolEntry* x1 = left->inf_name();
+            SymbolEntry* x2 =  right->inf_name();
+            x1->same.push_back(x2);
+            x2->same.push_back(x1);
+            x1->illegal.push_back(TYPE_Array);
+            x2->illegal.push_back(TYPE_Array);
+            x1->illegal.push_back(TYPE_Tref);
+            x2->illegal.push_back(TYPE_Tref);
+            x1->illegal.push_back(TYPE_Tfun);
+            x2->illegal.push_back(TYPE_Tfun);
+          }
+          type = new Boolean();
         }
-        else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
-          right->type_inf(left->getType());
+        else {
+          fprintf(stderr, "Error: Type Mismatch! Expected two arguments of the same comparable type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
+          exit(1);
         }
-        
-        else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
-          SymbolEntry* x1 = left->inf_name();
-          SymbolEntry* x2 =  right->inf_name();
-          x1->same.push_back(x2);
-          x2->same.push_back(x1);
-          x1->illegal.push_back(TYPE_Array);
-          x2->illegal.push_back(TYPE_Array);
-          x1->illegal.push_back(TYPE_Tfun);
-          x2->illegal.push_back(TYPE_Tfun);
-        }
-        type = new Boolean();
-      }
-      else {
-        fprintf(stderr, "Error: Type Mismatch! Expected two arguments of the same comparable type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
-        exit(1);
-      }
-    }
+        break;
 
-    else if(! strcmp(op, "<") || ! strcmp(op, ">") || ! strcmp(op, "<=") || ! strcmp(op, ">=")) {
-      if((left->type_check(TYPE_Integer) || left->type_check(TYPE_Real) || left->type_check(TYPE_Char)) && (left->type_check(right->getVal()))) {
-        if(left->getVal()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
-          left->type_inf(right->getType());
+      case lt: case leq: case gt: case geq:
+        if((left->type_check(TYPE_Integer) || left->type_check(TYPE_Real) || left->type_check(TYPE_Char)) && (left->type_check(right->getVal()))) {
+          if(left->getVal()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
+            left->changeType(right->getType());
+            left->type_inf(right->getType());
+          }
+          else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
+            right->changeType(left->getType());
+            right->type_inf(left->getType());
+          }
+          
+          else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
+            //fix expr types here
+            SymbolEntry* x1 = left->inf_name();
+            SymbolEntry* x2 =  right->inf_name();
+            x1->same.push_back(x2);
+            x2->same.push_back(x1);
+            x1->illegal.push_back(TYPE_Array);
+            x2->illegal.push_back(TYPE_Array);
+            x1->illegal.push_back(TYPE_Tfun);
+            x2->illegal.push_back(TYPE_Tfun);
+            x1->illegal.push_back(TYPE_Boolean);
+            x2->illegal.push_back(TYPE_Boolean);
+            x1->illegal.push_back(TYPE_Unit);
+            x2->illegal.push_back(TYPE_Unit);
+            x1->illegal.push_back(TYPE_Tref);
+            x2->illegal.push_back(TYPE_Tref);
+            x1->illegal.push_back(TYPE_Tid);
+            x2->illegal.push_back(TYPE_Tid);
+          }
+          type = new Boolean();
         }
-        else if(right->getVal()==TYPE_Unknown && left->getVal()!=TYPE_Unknown) {
-          right->type_inf(left->getType());
+        else {
+          fprintf(stderr, "Error: Type Mismatch! Expected two arguments of the same comparable type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
+          exit(1);
         }
-        
-        else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
-          SymbolEntry* x1 = left->inf_name();
-          SymbolEntry* x2 =  right->inf_name();
-          x1->same.push_back(x2);
-          x2->same.push_back(x1);
-          x1->illegal.push_back(TYPE_Array);
-          x2->illegal.push_back(TYPE_Array);
-          x1->illegal.push_back(TYPE_Tfun);
-          x2->illegal.push_back(TYPE_Tfun);
-          x1->illegal.push_back(TYPE_Boolean);
-          x2->illegal.push_back(TYPE_Boolean);
-          x1->illegal.push_back(TYPE_Unit);
-          x2->illegal.push_back(TYPE_Unit);
-          x1->illegal.push_back(TYPE_Tref);
-          x2->illegal.push_back(TYPE_Tref);
-          x1->illegal.push_back(TYPE_Tid);
-          x2->illegal.push_back(TYPE_Tid);
-        }
-        type = new Boolean();
-      }
-      else {
-        fprintf(stderr, "Error: Type Mismatch! Expected two arguments of the same comparable type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
-        exit(1);
-      }
-    }
+        break;
 
-    else if(! strcmp(op, "&&") || ! strcmp(op, "||")) {
-      if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
-        if(left->getVal()==TYPE_Unknown) {
-          left->type_inf(new Boolean());
+      case anda: case ora:
+        if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+          if(left->getVal()==TYPE_Unknown) {
+            left->changeType(new Boolean());
+            left->type_inf(left->getType());
+          }
+          if(right->getVal()==TYPE_Unknown) {
+            right->changeType(new Boolean());
+            right->type_inf(right->getType());
+          }
+          type = new Boolean();
         }
-        if(right->getVal()==TYPE_Unknown) {
-          right->type_inf(new Boolean());
+        else {
+          fprintf(stderr, "Error: Type Mismatch! Expected two booleans and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
+          exit(1);
         }
-        type = new Boolean();
-      }
-      else {
-        fprintf(stderr, "Error: Type Mismatch! Expected two booleans and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
-        exit(1);
-      }
-    }
+        break;
 
-    else if(! strcmp(op, ":=")) {
-      if(left->type_check(TYPE_Tref) && (right->type_check(left->getOfval()))) {
-        if(left->getOfval()==TYPE_Unknown) {
-          left->getType()->oftype = right->getType();
+      //check this again!!!
+      case ref:
+        if(left->type_check(TYPE_Tref) && (right->type_check(left->getOfval())) && right->getVal()!=TYPE_Array) {
+          if(left->getOfval()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
+            left->changeType(new Tref(new Tunknown()));
+            left->getType()->oftype = right->getType();
+          }
+          else if(left->getOfval()!=TYPE_Unknown && right->getVal()==TYPE_Unknown) {
+            right->changeType(left->getType()->oftype);
+          }
+          else if(left->getOfval()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
+            //fix this here
+            left->changeType(new Tref(new Tunknown()));
+            SymbolEntry* x1 = left->inf_name();
+            SymbolEntry* x2 =  right->inf_name();
+            x1->same.push_back(x2);
+            x2->same.push_back(x1);
+            x1->illegal.push_back(TYPE_Array);
+            x2->illegal.push_back(TYPE_Array);
+          }
+          type = new Unit();
         }
-        type = new Unit();
-      }
-      else {
-        fprintf(stderr, "Error: Type Mismatch! Expected a reference and an expression of its type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
-        exit(1);
-      }
-    }
+        else {
+          fprintf(stderr, "Error: Type Mismatch! Expected a reference and an expression of its type and found %s and %s \n", ToString(left->getType()), ToString(right->getType()));
+          exit(1);
+        }
+        break;
 
-    // na testarw oti oi typoi sto ; einai egkyroi
-    else if(! strcmp(op, ";")) {
-      type = right->getType();
-    }
+      // na testarw oti oi typoi sto ; einai egkyroi
+      case er:
+        //na prosthesw ta exprs sta katallila vertexes gia na paroyn typoys an xreiastei
+        type = right->getType();
+        break;
+      
+      default:
+        break;
+      }
   }
+
+  virtual llvm::Value* compile() override
+	{
+		llvm::Value* l = left->compile();
+    llvm::Value* r = right->compile();
+
+    switch(op) {
+      
+      case plus:
+        return Builder.CreateAdd(l, r, "addtmp");
+
+      case minus:
+        return Builder.CreateSub(l, r, "subtmp");
+
+      case mul:
+        return Builder.CreateMul(l, r, "multmp");
+
+      case diva:
+        return Builder.CreateSDiv(l, r, "divtmp");
+
+      case mod:
+        return Builder.CreateSRem(l, r, "modtmp");
+
+      case fplus:
+        return Builder.CreateFAdd(l, r, "addftmp");
+
+      case fminus:
+        return Builder.CreateFSub(l, r, "subftmp");
+
+      case fmul:
+        return Builder.CreateFMul(l, r, "mulftmp");
+
+      case fdiv:
+        return Builder.CreateFDiv(l, r, "divftmp");
+
+      case power:
+      //NOT IMPLEMENTED YET
+        return nullptr; 
+
+      case eq:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpEQ(l, r, "eqtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpOEQ(l, r, "feqtmp");
+        }
+        else if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+          return Builder.CreateICmpEQ(l, r, "beqtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpEQ(l, r, "ceqtmp");
+        }
+        else if(left->type_check(TYPE_Unit) && right->type_check(TYPE_Unit)) {
+          return Builder.CreateICmpEQ(c32(0), c32(0), "ueqtmp");
+        }
+        else {
+          //NOT IMPLEMENTED YET
+          return nullptr;
+        }
+
+      case neq:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpNE(l, r, "neqtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpONE(l, r, "fneqtmp");
+        }
+        else if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+          return Builder.CreateICmpNE(l, r, "bneqtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpNE(l, r, "cneqtmp");
+        }
+        else if(left->type_check(TYPE_Unit) && right->type_check(TYPE_Unit)) {
+          return Builder.CreateICmpNE(c32(0), c32(0), "uneqtmp");
+        }
+        else {
+          //NOT IMPLEMENTED YET
+          return nullptr;
+        }
+
+      case deq:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpEQ(l, r, "eqtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpOEQ(l, r, "feqtmp");
+        }
+        else if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+          return Builder.CreateICmpEQ(l, r, "beqtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpEQ(l, r, "ceqtmp");
+        }
+        else if(left->type_check(TYPE_Unit) && right->type_check(TYPE_Unit)) {
+          return Builder.CreateICmpEQ(c32(0), c32(0), "ueqtmp");
+        }
+        else {
+          //NOT IMPLEMENTED YET
+          return nullptr;
+        } 
+
+      case dneq:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpNE(l, r, "neqtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpONE(l, r, "fneqtmp");
+        }
+        else if(left->type_check(TYPE_Boolean) && right->type_check(TYPE_Boolean)) {
+          return Builder.CreateICmpNE(l, r, "bneqtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpNE(l, r, "cneqtmp");
+        }
+        else if(left->type_check(TYPE_Unit) && right->type_check(TYPE_Unit)) {
+          return Builder.CreateICmpNE(c32(0), c32(0), "uneqtmp");
+        }
+        else {
+          //NOT IMPLEMENTED YET
+          return nullptr;
+        }
+
+      case lt:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpSLT(l, r, "ltmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpOLT(l, r, "fltmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpSLT(l, r, "cltmp");
+        }
+        else return nullptr;
+
+      case gt:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpSGT(l, r, "gtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpOGT(l, r, "fgtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpSGT(l, r, "cgtmp");
+        }
+        else return nullptr;
+
+      case leq:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpSLE(l, r, "leqtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpOLE(l, r, "fleqtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpSLE(l, r, "cleqtmp");
+        }
+        else return nullptr;
+
+      case geq:
+        if(left->type_check(TYPE_Integer) && right->type_check(TYPE_Integer)) {
+          return Builder.CreateICmpSGE(l, r, "geqtmp");
+        }
+        else if(left->type_check(TYPE_Real) && right->type_check(TYPE_Real)) {
+          return Builder.CreateFCmpOGE(l, r, "fgeqtmp");
+        }
+        else if(left->type_check(TYPE_Char) && right->type_check(TYPE_Char)) {
+          return Builder.CreateICmpSGE(l, r, "cgeqtmp");
+        }
+        else return nullptr;
+
+      case anda:
+        return Builder.CreateAnd(l, r, "andtmp");
+
+      case ora:
+        return Builder.CreateOr(l, r, "ortmp");
+
+      case ref:
+        //NOT IMPLEMENTED YET
+        return nullptr;
+      
+      case er:
+        return r;
+
+      default:
+        fprintf(stderr, "Error: %s\n", "Must not come here");
+        exit(1);
+        return nullptr;  
+    }
+
+	}
 
 
 private:
   Expr *left;
-  const char *op;
+  OPS op;
   Expr *right;
 };
 
 
 class Unop: public Expr {
 public:
-  Unop(const char *o, Expr *r): op(o), right(r) {}
+  Unop(OPS o, Expr *r): op(o), right(r) {}
   ~Unop() { delete right; }
   virtual void printOn(std::ostream &out) const override {
-    out << op << "(" << *right << ")";
+    out <<  "(" << *right << ")";
   }
 
   virtual void sem() override {
     right->sem();
-
-    if(! strcmp(op, "+") || ! strcmp(op, "-")) {
-      if(right->type_check(TYPE_Integer)) {
-        if(right->getVal()==TYPE_Unknown) {
-          right->type_inf(new Integer());
+    switch(op) {
+      case plus: case minus:
+        if(right->type_check(TYPE_Integer)) {
+          if(right->getVal()==TYPE_Unknown) {
+            right->changeType(new Integer());
+            right->type_inf(right->getType());
+          }
+          type = new Integer();
         }
-        type = new Integer();
-      }
-      else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
-        exit(1);
-      }
-    }
-
-    else if(! strcmp(op, "+.") || ! strcmp(op, "-.")) {
-      if(right->type_check(TYPE_Real)) {
-        if(right->getVal()==TYPE_Unknown) {
-          right->type_inf(new Real());
+        else {
+          fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+          exit(1);
         }
-        type = new Real();
-      }
-      else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
-        exit(1);
-      }
-    }
+        break;
 
-    else if(! strcmp(op, "not")) {
-      if(right->type_check(TYPE_Boolean)) {
-        if(right->getVal()==TYPE_Unknown) {
-          right->type_inf(new Boolean());
+      case fplus: case fminus:
+        if(right->type_check(TYPE_Real)) {
+          if(right->getVal()==TYPE_Unknown) {
+            right->changeType(new Real());
+            right->type_inf(right->getType());
+          }
+          type = new Real();
         }
-        type = new Boolean();
-      }
-      else {
-        fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+        else {
+          fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+          exit(1);
+        }
+        break;
+
+      case nota:
+        if(right->type_check(TYPE_Boolean)) {
+          if(right->getVal()==TYPE_Unknown) {
+            right->changeType(new Boolean());
+            right->type_inf(right->getType());
+          }
+          type = new Boolean();
+        }
+        else {
+          fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
+          exit(1);
+        }
+        break;
+
+      default:
+        fprintf(stderr, "Error: %s\n", "Must not come here");
         exit(1);
-      }
+        break;  
     }
   }
 
+  virtual llvm::Value* compile() override
+	{
+    llvm::Value* r = right->compile();
+
+    switch(op) {
+      
+      case plus:
+        return Builder.CreateAdd(c32(0), r, "addtmp");
+
+      case minus:
+        return Builder.CreateSub(c32(0), r, "subtmp");
+
+      case fplus:
+        return Builder.CreateFAdd(fp(0), r, "faddtmp");
+
+      case fminus:
+        return Builder.CreateFSub(fp(0), r, "fsubtmp");
+
+      case nota:
+        return Builder.CreateNot(r, "nottmp");
+
+      default:
+        return nullptr;
+
+    }
+  }  
+
 private:
-  const char *op;
+  OPS op;
   Expr *right;
 };
 
@@ -303,6 +611,7 @@ public:
 
     if (exp->type_check(TYPE_Tref)) {
       if(exp->getVal()==TYPE_Unknown) {
+          //exp->changeType(new Tref(new Tunknown()));
           exp->type_inf(new Tref(new Tunknown()));
         }
       type = new Unit();
@@ -311,6 +620,11 @@ public:
         fprintf(stderr, "Error: %s\n", "Type Mismatch!!!");
         exit(1);
     }
+  }
+
+  virtual llvm::Value* compile() override {
+    //NOT IMPLEMENTED YET
+    return nullptr;
   }
 
 private:
@@ -334,8 +648,9 @@ public:
 
     if (cond->type_check(TYPE_Boolean)) {
       if(cond->getVal()==TYPE_Unknown) {
-          cond->type_inf(new Boolean());
-        }
+        //cond->changeType(new Boolean());  
+        cond->type_inf(new Boolean());
+      }
       
       stmt1->sem();
       
@@ -348,10 +663,14 @@ public:
           exit(1);
         }
         if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()!=TYPE_Unknown) {
+          //stmt1->changeType(stmt2->getType());
           stmt1->type_inf(stmt2->getType());
+          //type = stmt2->getType();
         }
         else if(stmt2->getVal()==TYPE_Unknown && stmt1->getVal()!=TYPE_Unknown) {
+          //stmt2->changeType(stmt1->getType());
           stmt2->type_inf(stmt1->getType());
+          //type = stmt1->getType();
         }
         
         else if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()==TYPE_Unknown) {
@@ -359,16 +678,51 @@ public:
           SymbolEntry* x2 =  stmt2->inf_name();
           x1->same.push_back(x2);
           x2->same.push_back(x1);
+          //na ftiaksw to expr vector gia ta stmts
+          //type = stmt1->getType();
         }
       }
 
-      type = stmt1->getType();
-    
+      //na ftiaksw to expr vector gia to stmt1
+      type = stmt1->getType(); 
     }
     else {
         fprintf(stderr, "Error: %s\n", "Type Mismatch at If condition!!!");
         exit(1);
     }
+  }
+
+  virtual llvm::Value* compile() override {
+    llvm::Value *v = cond->compile();
+    llvm::Value *cond2 = Builder.CreateICmpNE(v, c32(0), "if_cond");
+
+    llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+    llvm::BasicBlock *ThenBB =
+      llvm::BasicBlock::Create(TheContext, "then", TheFunction);
+    llvm::BasicBlock *ElseBB =
+      llvm::BasicBlock::Create(TheContext, "else");
+    llvm::BasicBlock *AfterBB =
+      llvm::BasicBlock::Create(TheContext, "endif");
+    Builder.CreateCondBr(cond2, ThenBB, ElseBB);
+
+    Builder.SetInsertPoint(ThenBB);
+    llvm::Value* st1 = stmt1->compile();
+    Builder.CreateBr(AfterBB);
+
+    TheFunction->getBasicBlockList().push_back(ElseBB);
+    Builder.SetInsertPoint(ElseBB);
+    llvm::Value* st2;
+    if (stmt2 != nullptr)
+      st2 = stmt2->compile();
+    Builder.CreateBr(AfterBB);
+
+    TheFunction->getBasicBlockList().push_back(AfterBB);
+    Builder.SetInsertPoint(AfterBB);
+    llvm::PHINode *PN = Builder.CreatePHI(translateType(stmt1->getType()), 2, "iftmp");
+    PN->addIncoming(st1, ThenBB);
+    PN->addIncoming(st2, ElseBB);
+    return PN;
+
   }
 
   virtual void type_inf(Type* t) override {
@@ -403,13 +757,15 @@ public:
 
     if (cond->type_check(TYPE_Boolean)) {
       if(cond->getVal()==TYPE_Unknown) {
-        cond->type_inf(new Boolean());
+        cond->changeType(new Boolean());
+        cond->type_inf(cond->getType());
       }
 
       stmt1->sem();
       if (stmt1->type_check(TYPE_Unit)) {
         if(stmt1->getVal()==TYPE_Unknown) {
-          stmt1->type_inf(new Unit());
+          stmt1->changeType(new Unit());
+          stmt1->type_inf(stmt1->getType());
         }
 
         type = new Unit();
@@ -449,16 +805,19 @@ public:
     stmt1->sem();
     if (cond->type_check(TYPE_Integer) && stmt1->type_check(TYPE_Integer)) {
       if(cond->getVal()==TYPE_Unknown) {
-        cond->type_inf(new Integer());
+        cond->changeType(new Integer());
+        cond->type_inf(cond->getType());
       }
       if(stmt1->getVal()==TYPE_Unknown) {
-        stmt1->type_inf(new Integer());
+        stmt1->changeType(new Integer());
+        stmt1->type_inf(stmt1->getType());
       }
 
       stmt2->sem();
       if (stmt2->type_check(TYPE_Unit)) {
         if(stmt2->getVal()==TYPE_Unknown) {
-          stmt2->type_inf(new Unit());
+          stmt2->changeType(new Unit());
+          stmt2->type_inf(stmt2->getType());
         }
         type = new Unit();
       }
@@ -817,12 +1176,17 @@ public:
 
   Type* tp2;
 
+  //fix the tp2 case with expr vector
   virtual void sem() override {
     if (tp==nullptr){
       tp2 = new Tunknown();
       st.insert(iden, tp2, ENTRY_PARAMETER);
+      type = tp2;
     }
-    else {st.insert(iden, tp, ENTRY_PARAMETER);}
+    else {
+      st.insert(iden, tp, ENTRY_PARAMETER);
+      type = tp;
+    }
   }
 
   Type* getType() {
@@ -897,6 +1261,8 @@ private:
   int size;
 };
 
+
+//fix the whole DEF part
 class Def: public AST {
 public:
   Def(char *id, Parlist *l = nullptr, Expr *e = nullptr, Type *t = nullptr, Exprlist *el = nullptr):
@@ -1170,6 +1536,7 @@ private:
   Deflist *dlist;
 };
 
+//fix the type part of LETIN
 class Letin: public Expr {
 public:
   Letin(Let *l, Expr *e): let(l), expr(e) {}
@@ -1245,6 +1612,10 @@ public:
     type = new Integer();
   }
 
+  virtual llvm::Value* compile() override {
+    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(TheContext), ien);
+  }
+
 private:
   int ien;
   bool check;
@@ -1305,6 +1676,10 @@ public:
     type = new Real();
   }
 
+  virtual llvm::Value* compile() override {
+    return llvm::ConstantFP::get(llvm::Type::getFloatTy(TheContext), ien);
+  }
+
 private:
   float ien;
   bool check;
@@ -1327,6 +1702,12 @@ public:
     type = new Char();
   }
 
+  virtual llvm::Value* compile() override
+	{
+		return c8(*ch);
+    //return llvm::ConstantInt::get(i8, c);
+	}
+
 private:
   char *ch;
 };
@@ -1343,6 +1724,66 @@ public:
   virtual void sem() override {
     type = new Array(new Char(), 1);
   }
+
+  virtual llvm::Value* compile() override
+	{	
+		char* test = new char[strlen(str)];
+		int test_index = 0;	
+
+		/* This for loop transforms pairs of chars to esc chars where needed */
+		for(size_t i=0;i<strlen(str);i++)
+		{
+			if (str[i] == '\\')
+			{
+				switch(str[i+1])
+				{
+					case 'n':  	
+						test[test_index++] = '\n';
+						i++;
+						break;
+					case 't': 	
+						test[test_index++] = '\t';
+						i++;
+						break;
+					case 'r': 	
+						test[test_index++] = '\r';
+						i++;
+						break;
+					case '0': 	
+						test[test_index++] = '\0';
+						i++;
+						break;
+					case '\\': 	
+						test[test_index++] = '\\';
+						i++;
+						break;
+					case '\'': 	
+						test[test_index++] = '\'';
+						i++;
+						break;
+					case '\"': 	
+						test[test_index++] = '\"';
+						i++;
+						break;
+					default:
+						test[test_index++] = str[i];
+						break;
+				}
+			}
+			else
+				test[test_index++] = str[i];
+		}
+		test[test_index] = '\0';
+
+
+
+
+		std::string s(test);
+		s = s.substr(1, s.size() - 2);
+		
+    delete[] test;
+		return Builder.CreateGlobalStringPtr(s);
+	}
 
 private:
   const char *str;
@@ -1390,6 +1831,11 @@ public:
   virtual void sem(Type* t) override {
     type = new Boolean();
   }
+
+  virtual llvm::Value* compile() override
+	{
+		return c1(ien);
+	}
 
 private:
   int ien;

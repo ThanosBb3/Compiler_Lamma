@@ -1,0 +1,13 @@
+let program = let mutable a1 : int
+            and mutable p1 : int
+            and mutable a2 : int
+            and mutable p2 : int in
+                !a1 = read_int ();
+                !p1 = read_int ();
+                !a2 = read_int ();
+                !p2 = read_int ();
+                let res1 = (!a1*!p2)+(!a2*!p1)
+                and res2 = !p1*!p2 in
+                        print_int res1;
+                        print_string " ";
+                        print_int res2

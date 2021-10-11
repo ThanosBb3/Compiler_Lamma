@@ -1,0 +1,5 @@
+let a = print_string "hello world\n"
+and c = print_string "hello ";
+        print_string "world\n"
+and d = print_string "hello world";
+        print_string "\n"

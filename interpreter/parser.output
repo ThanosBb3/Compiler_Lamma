@@ -1,7 +1,3 @@
-State 176 conflicts: 23 shift/reduce
-State 216 conflicts: 22 shift/reduce
-
-
 Grammar
 
     0 $accept: program $end
@@ -4410,7 +4406,6 @@ State 176
     "=="    shift, and go to state 112
     "!="    shift, and go to state 113
     ":="    shift, and go to state 114
-    ';'     shift, and go to state 115
     '='     shift, and go to state 116
     '<'     shift, and go to state 117
     '>'     shift, and go to state 118
@@ -4419,29 +4414,6 @@ State 176
     '*'     shift, and go to state 121
     '/'     shift, and go to state 122
 
-    "else"    [reduce using rule 79 (expr)]
-    "mod"     [reduce using rule 79 (expr)]
-    "+."      [reduce using rule 79 (expr)]
-    "-."      [reduce using rule 79 (expr)]
-    "*."      [reduce using rule 79 (expr)]
-    "/."      [reduce using rule 79 (expr)]
-    "&&"      [reduce using rule 79 (expr)]
-    "**"      [reduce using rule 79 (expr)]
-    "||"      [reduce using rule 79 (expr)]
-    "<>"      [reduce using rule 79 (expr)]
-    "<="      [reduce using rule 79 (expr)]
-    ">="      [reduce using rule 79 (expr)]
-    "=="      [reduce using rule 79 (expr)]
-    "!="      [reduce using rule 79 (expr)]
-    ":="      [reduce using rule 79 (expr)]
-    ';'       [reduce using rule 79 (expr)]
-    '='       [reduce using rule 79 (expr)]
-    '<'       [reduce using rule 79 (expr)]
-    '>'       [reduce using rule 79 (expr)]
-    '+'       [reduce using rule 79 (expr)]
-    '-'       [reduce using rule 79 (expr)]
-    '*'       [reduce using rule 79 (expr)]
-    '/'       [reduce using rule 79 (expr)]
     $default  reduce using rule 79 (expr)
 
 
@@ -5062,7 +5034,6 @@ State 216
     "=="   shift, and go to state 112
     "!="   shift, and go to state 113
     ":="   shift, and go to state 114
-    ';'    shift, and go to state 115
     '='    shift, and go to state 116
     '<'    shift, and go to state 117
     '>'    shift, and go to state 118
@@ -5071,28 +5042,6 @@ State 216
     '*'    shift, and go to state 121
     '/'    shift, and go to state 122
 
-    "mod"     [reduce using rule 80 (expr)]
-    "+."      [reduce using rule 80 (expr)]
-    "-."      [reduce using rule 80 (expr)]
-    "*."      [reduce using rule 80 (expr)]
-    "/."      [reduce using rule 80 (expr)]
-    "&&"      [reduce using rule 80 (expr)]
-    "**"      [reduce using rule 80 (expr)]
-    "||"      [reduce using rule 80 (expr)]
-    "<>"      [reduce using rule 80 (expr)]
-    "<="      [reduce using rule 80 (expr)]
-    ">="      [reduce using rule 80 (expr)]
-    "=="      [reduce using rule 80 (expr)]
-    "!="      [reduce using rule 80 (expr)]
-    ":="      [reduce using rule 80 (expr)]
-    ';'       [reduce using rule 80 (expr)]
-    '='       [reduce using rule 80 (expr)]
-    '<'       [reduce using rule 80 (expr)]
-    '>'       [reduce using rule 80 (expr)]
-    '+'       [reduce using rule 80 (expr)]
-    '-'       [reduce using rule 80 (expr)]
-    '*'       [reduce using rule 80 (expr)]
-    '/'       [reduce using rule 80 (expr)]
     $default  reduce using rule 80 (expr)
 
 

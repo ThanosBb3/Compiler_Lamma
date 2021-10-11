@@ -1,0 +1,6 @@
+let n = 20
+
+let num_hello (x : unit) = print_int n;
+                           print_string " hello world\n"
+
+let program = for i = 1 to n do num_hello () done

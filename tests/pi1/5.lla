@@ -1,0 +1,7 @@
+let hello (x : unit) = print_string "hello world\n"
+
+let program = let mutable n : int in
+                print_string "Give number of greetings ";
+                print_string "then press <enter>: ";
+                !n = read_int ();
+                for i = 1 to !n do hello () done

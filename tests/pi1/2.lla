@@ -1,0 +1,6 @@
+let hello (x : unit) = print_string "hello world\n"
+
+let main = hello ();
+        hello ();
+        hello ();
+        hello ()

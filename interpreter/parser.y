@@ -61,8 +61,10 @@
 %token T_def ":="
 
 
-%nonassoc "in"
+%nonassoc "let" "in"
 %left<op> ';'
+%nonassoc "if" "then"
+%nonassoc "else"
 %nonassoc<op> ":="
 %left<op> "||"
 %left<op> "&&"
@@ -243,33 +245,33 @@ muldim:
 ;
 
 expr:
-    expr '+' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr '-' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr "+." expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr "-." expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr '*' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr "*." expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr '/' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr "/." expr                                      { $$ = new Binop($1, $2, $3); }     
-|   expr "mod" expr                                     { $$ = new Binop($1, $2, $3); }
-|   expr "**" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr '=' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr "<>" expr                                      { $$ = new Binop($1, $2, $3); } 
-|   expr '<' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr '>' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr "<=" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr ">=" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr "==" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr "!=" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr "&&" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr "||" expr                                      { $$ = new Binop($1, $2, $3); }
-|   expr ';' expr                                       { $$ = new Binop($1, $2, $3); }
-|   expr ":=" expr                                      { $$ = new Binop($1, $2, $3); }
-|   '+' expr    %prec UNOP                              { $$ = new Unop($1, $2); }
-|   '-' expr    %prec UNOP                              { $$ = new Unop($1, $2); }
-|   "+." expr   %prec UNOP                              { $$ = new Unop($1, $2); }
-|   "-." expr   %prec UNOP                              { $$ = new Unop($1, $2); }
-|   "not" expr                                          { $$ = new Unop($1, $2); }
+    expr '+' expr                                       { $$ = new Binop($1, plus, $3); }
+|   expr '-' expr                                       { $$ = new Binop($1, minus, $3); }
+|   expr "+." expr                                      { $$ = new Binop($1, fplus, $3); }
+|   expr "-." expr                                      { $$ = new Binop($1, fminus, $3); }
+|   expr '*' expr                                       { $$ = new Binop($1, mul, $3); }
+|   expr "*." expr                                      { $$ = new Binop($1, fmul, $3); }
+|   expr '/' expr                                       { $$ = new Binop($1, diva, $3); }
+|   expr "/." expr                                      { $$ = new Binop($1, fdiv, $3); }     
+|   expr "mod" expr                                     { $$ = new Binop($1, mod, $3); }
+|   expr "**" expr                                      { $$ = new Binop($1, power, $3); }
+|   expr '=' expr                                       { $$ = new Binop($1, eq, $3); }
+|   expr "<>" expr                                      { $$ = new Binop($1, neq, $3); } 
+|   expr '<' expr                                       { $$ = new Binop($1, lt, $3); }
+|   expr '>' expr                                       { $$ = new Binop($1, gt, $3); }
+|   expr "<=" expr                                      { $$ = new Binop($1, leq, $3); }
+|   expr ">=" expr                                      { $$ = new Binop($1, geq, $3); }
+|   expr "==" expr                                      { $$ = new Binop($1, deq, $3); }
+|   expr "!=" expr                                      { $$ = new Binop($1, dneq, $3); }
+|   expr "&&" expr                                      { $$ = new Binop($1, anda, $3); }
+|   expr "||" expr                                      { $$ = new Binop($1, ora, $3); }
+|   expr ';' expr                                       { $$ = new Binop($1, er, $3); }
+|   expr ":=" expr                                      { $$ = new Binop($1, ref, $3); }
+|   '+' expr    %prec UNOP                              { $$ = new Unop(plus, $2); }
+|   '-' expr    %prec UNOP                              { $$ = new Unop(minus, $2); }
+|   "+." expr   %prec UNOP                              { $$ = new Unop(fplus, $2); }
+|   "-." expr   %prec UNOP                              { $$ = new Unop(fminus, $2); }
+|   "not" expr                                          { $$ = new Unop(nota, $2); }
 |   T_id mulexpr2                                       { $$ = new Call($1, $2); }
 |   T_Id mulexpr2                                       { $$ = new Call($1, $2); }
 |   letdef "in" expr                                    { $$ = new Letin($1, $3); }

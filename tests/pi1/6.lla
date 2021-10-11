@@ -1,0 +1,12 @@
+let hello (x : unit) = print_string "hello world\n"
+
+let program = let mutable n : int in
+                print_string "Give number of greetings then press <enter>: ";
+                !n = read_int();
+                if !n < 0 then begin
+                                print_string "The number ";
+                                print_int !n;
+                                print_string " is negative"
+                               end
+                        else for i = 1 to !n do hello () done
+            
