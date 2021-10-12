@@ -119,3 +119,4 @@ inline std::ostream& operator<< (std::ostream &out, const AST &t) {
   t.printOn(out);
   return out;
 }
+

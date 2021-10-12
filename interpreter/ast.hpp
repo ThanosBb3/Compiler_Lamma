@@ -49,47 +49,6 @@ static inline llvm::Type *translateType(Type* type)
 	return ret;
 }
 
-class Expr: public AST {
-public:
-  bool type_check(Types t) {
-    if(type->val==TYPE_Unknown || t==TYPE_Unknown) {
-      return true;
-    }
-    else if (type->val == t) return true;
-    else return false;
-  }
-
-  Type *getType() {
-    return type;
-  }
-
-  Types getVal() {
-    return type->val;
-  }
-
-  Types getOfval() {
-    return type->oftype->val;
-  }
-
-  virtual void type_inf(Type* t) {}
-
-  virtual SymbolEntry* inf_name() {
-    return nullptr;
-  }
-
-  virtual char* get_name() {
-    return nullptr;
-  }
-
-  virtual void changeType(Type* t) {
-    type = t;
-  }
-
-
-protected:
-  Type *type;  
-};
-
 class Exprlist: public AST {
 public:
   Exprlist(): elist(), size(0) {}
@@ -135,7 +94,7 @@ public:
   Binop(Expr *l, OPS o, Expr *r): left(l), op(o), right(r) {}
   ~Binop() { delete left; delete right; }
   virtual void printOn(std::ostream &out) const override {
-    out <<  "(" << *left << ", " << *right << ")";
+    out <<  "(" << *left << ToString(left->getType()) << ", " << *right << ToString(right->getType()) << ")";
   }
 
   virtual void sem() override {
@@ -191,17 +150,14 @@ public:
           }
           
           else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
-            //fix expr types here
-            SymbolEntry* x1 = left->inf_name();
-            SymbolEntry* x2 =  right->inf_name();
-            x1->same.push_back(x2);
-            x2->same.push_back(x1);
-            x1->illegal.push_back(TYPE_Array);
-            x2->illegal.push_back(TYPE_Array);
-            x1->illegal.push_back(TYPE_Tref);
-            x2->illegal.push_back(TYPE_Tref);
-            x1->illegal.push_back(TYPE_Tfun);
-            x2->illegal.push_back(TYPE_Tfun);
+            left->same.push_back(right);
+            right->same.push_back(left);
+            left->illegal.push_back(TYPE_Array);
+            right->illegal.push_back(TYPE_Array);
+            left->illegal.push_back(TYPE_Tref);
+            right->illegal.push_back(TYPE_Tref);
+            left->illegal.push_back(TYPE_Tfun);
+            right->illegal.push_back(TYPE_Tfun);
           }
           type = new Boolean();
         }
@@ -223,23 +179,21 @@ public:
           }
           
           else if(left->getVal()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
-            //fix expr types here
-            SymbolEntry* x1 = left->inf_name();
-            SymbolEntry* x2 =  right->inf_name();
-            x1->same.push_back(x2);
-            x2->same.push_back(x1);
-            x1->illegal.push_back(TYPE_Array);
-            x2->illegal.push_back(TYPE_Array);
-            x1->illegal.push_back(TYPE_Tfun);
-            x2->illegal.push_back(TYPE_Tfun);
-            x1->illegal.push_back(TYPE_Boolean);
-            x2->illegal.push_back(TYPE_Boolean);
-            x1->illegal.push_back(TYPE_Unit);
-            x2->illegal.push_back(TYPE_Unit);
-            x1->illegal.push_back(TYPE_Tref);
-            x2->illegal.push_back(TYPE_Tref);
-            x1->illegal.push_back(TYPE_Tid);
-            x2->illegal.push_back(TYPE_Tid);
+            
+            left->same.push_back(right);
+            right->same.push_back(left);
+            left->illegal.push_back(TYPE_Array);
+            right->illegal.push_back(TYPE_Array);
+            left->illegal.push_back(TYPE_Tfun);
+            right->illegal.push_back(TYPE_Tfun);
+            left->illegal.push_back(TYPE_Boolean);
+            right->illegal.push_back(TYPE_Boolean);
+            left->illegal.push_back(TYPE_Unit);
+            right->illegal.push_back(TYPE_Unit);
+            left->illegal.push_back(TYPE_Tref);
+            right->illegal.push_back(TYPE_Tref);
+            left->illegal.push_back(TYPE_Tid);
+            right->illegal.push_back(TYPE_Tid);
           }
           type = new Boolean();
         }
@@ -267,25 +221,23 @@ public:
         }
         break;
 
-      //check this again!!!
+      
       case ref:
         if(left->type_check(TYPE_Tref) && (right->type_check(left->getOfval())) && right->getVal()!=TYPE_Array) {
           if(left->getOfval()==TYPE_Unknown && right->getVal()!=TYPE_Unknown) {
-            left->changeType(new Tref(new Tunknown()));
-            left->getType()->oftype = right->getType();
+            left->changeType(new Tref(right->getType()));
+            left->type_inf(left->getType());
           }
           else if(left->getOfval()!=TYPE_Unknown && right->getVal()==TYPE_Unknown) {
             right->changeType(left->getType()->oftype);
+            right->type_inf(right->getType());
           }
           else if(left->getOfval()==TYPE_Unknown && right->getVal()==TYPE_Unknown) {
-            //fix this here
-            left->changeType(new Tref(new Tunknown()));
-            SymbolEntry* x1 = left->inf_name();
-            SymbolEntry* x2 =  right->inf_name();
-            x1->same.push_back(x2);
-            x2->same.push_back(x1);
-            x1->illegal.push_back(TYPE_Array);
-            x2->illegal.push_back(TYPE_Array);
+            
+            left->types2of.push_back(right);
+            right->refs2type.push_back(left);
+            left->ofillegal.push_back(TYPE_Array);
+            right->illegal.push_back(TYPE_Array);
           }
           type = new Unit();
         }
@@ -648,7 +600,7 @@ public:
 
     if (cond->type_check(TYPE_Boolean)) {
       if(cond->getVal()==TYPE_Unknown) {
-        //cond->changeType(new Boolean());  
+        cond->changeType(new Boolean());  
         cond->type_inf(new Boolean());
       }
       
@@ -663,27 +615,23 @@ public:
           exit(1);
         }
         if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()!=TYPE_Unknown) {
-          //stmt1->changeType(stmt2->getType());
+          stmt1->changeType(stmt2->getType());
           stmt1->type_inf(stmt2->getType());
-          //type = stmt2->getType();
+          
         }
         else if(stmt2->getVal()==TYPE_Unknown && stmt1->getVal()!=TYPE_Unknown) {
-          //stmt2->changeType(stmt1->getType());
+          stmt2->changeType(stmt1->getType());
           stmt2->type_inf(stmt1->getType());
-          //type = stmt1->getType();
+          
         }
         
         else if(stmt1->getVal()==TYPE_Unknown && stmt2->getVal()==TYPE_Unknown) {
-          SymbolEntry* x1 = stmt1->inf_name();
-          SymbolEntry* x2 =  stmt2->inf_name();
-          x1->same.push_back(x2);
-          x2->same.push_back(x1);
-          //na ftiaksw to expr vector gia ta stmts
-          //type = stmt1->getType();
+          
+          stmt1->same.push_back(stmt2);
+          stmt2->same.push_back(stmt1);
+
         }
       }
-
-      //na ftiaksw to expr vector gia to stmt1
       type = stmt1->getType(); 
     }
     else {
@@ -1295,6 +1243,10 @@ public:
           if (exp->type_check(tp->val)) {
             exp->sem();
             st.insert(iden, tp, ENTRY_CONSTANT);
+            if(exp->getType()->val==TYPE_Unknown) {
+              exp->changeType(tp);
+              exp->type_inf(tp);
+            }
           }
           else {
             fprintf(stderr, "Error: %s\n", "Type of value and type of constant do not match!!!");
@@ -1325,6 +1277,10 @@ public:
           exp->sem();
           if (exp->type_check(tp->val)) {
             vt = plist->getPartypes();
+            if(exp->getType()->val==TYPE_Unknown) {
+              exp->changeType(tp);
+              exp->type_inf(tp);
+            }
             st.closeScope();
             st.insert(iden, tp, ENTRY_FUNCTION, vt);
           }
@@ -1355,6 +1311,18 @@ public:
       }
       else {
         elist->sem();
+        for (Expr* e : elist->getExps()) {
+          if(e->type_check(TYPE_Integer)) {
+            if(e->getType()->val==TYPE_Unknown){
+              e->changeType(new Integer());
+              e->type_inf(e->getType());
+            }
+          }
+          else {
+            fprintf(stderr, "Error! Dimension at array definition doesn't have type integer.");
+            exit(1);
+          }
+        }
         st.insert(iden, new Array(tp, elist->getSize()), ENTRY_VARIABLE);
       }
     }
@@ -1366,20 +1334,16 @@ public:
     if(plist!=nullptr && exp!=nullptr) {
       if(plist->getSize()==0) {
         if(tp==nullptr) {
-          if(!b) {
-            exp->sem();
-          }
-          else {
-            st.insert(iden, new Tunknown(), ENTRY_CONSTANT);
-          }
+          exp->sem();
+          st.insert(iden, exp->getType(), ENTRY_CONSTANT);
         }
         else {
           if (exp->type_check(tp->val)) {
-            if(!b) {
-              exp->sem();
-            }
-            else {
-              st.insert(iden, tp, ENTRY_CONSTANT);
+            exp->sem();
+            st.insert(iden, tp, ENTRY_CONSTANT);
+            if(exp->getType()->val==TYPE_Unknown) {
+              exp->changeType(tp);
+              exp->type_inf(tp);
             }
           }
           else {
@@ -1412,6 +1376,10 @@ public:
           if(!b) {
             exp->sem();
             if (exp->type_check(tp->val)) {
+              if(exp->getType()->val==TYPE_Unknown) {
+                exp->changeType(tp);
+                exp->type_inf(tp);
+              }
               st.closeScope();
             }
             else {
@@ -1449,6 +1417,18 @@ public:
       }
       else {
         elist->sem();
+        for (Expr* e : elist->getExps()) {
+          if(e->type_check(TYPE_Integer)) {
+            if(e->getType()->val==TYPE_Unknown){
+              e->changeType(new Integer());
+              e->type_inf(e->getType());
+            }
+          }
+          else {
+            fprintf(stderr, "Error! Dimension at array definition doesn't have type integer.");
+            exit(1);
+          }
+        }
         st.insert(iden, new Array(tp, elist->getSize()), ENTRY_VARIABLE);
       }
     }
@@ -1549,6 +1529,8 @@ public:
     let->sem();
     expr->sem();
     type = expr->getType();
+    this->same.push_back(expr);
+    expr->same.push_back(this);
     st.closeScope();
   }
 
@@ -1800,6 +1782,8 @@ public:
   virtual void sem() override {
     exp->sem();
     type = exp->getType();
+    this->same.push_back(exp);
+    exp->same.push_back(this);
   }
 
   virtual void type_inf(Type* t) override {
@@ -1866,7 +1850,7 @@ public:
       out << "ConstrId" << "(" << name << ")";
     }
     else {
-      out << "Id" << "(" << name << ")";
+      out << "Id" << "(" << name << ")" << ToString(type) << " of " << ToString(type->oftype);
     }
   }
 
@@ -1875,6 +1859,9 @@ public:
     idd = st.lookup(name);
     if(idd!=nullptr){
       type = idd->getType();
+      //if(type->val==TYPE_Unknown){
+        idd->exlist.push_back(this);
+      //}
     }
     else{
       fprintf(stderr, "Error: %s\n", "This name has not been defined in the symbol table!!!");
@@ -1885,6 +1872,11 @@ public:
   virtual void sem(Type* t) override {
     st.insert(name, t, ENTRY_CONSTANT);
     type = t;
+    //if(type->val==TYPE_Unknown){
+      SymbolEntry* idd;
+      idd = st.lookup(name);
+      idd->exlist.push_back(this);
+    //}
   }
 
   virtual void type_inf(Type* t) override {
@@ -1930,6 +1922,10 @@ public:
           fprintf(stderr, "Error: %s\n", "Not every value of array's dimensions is of type-integer!!!");
           exit(1);
         }
+        else if(e->getType()->val==TYPE_Unknown){
+          e->changeType(new Integer());
+          e->type_inf(e->getType());
+        }
       }
       type = new Tref(arr->getType()->oftype);
       }
@@ -1966,15 +1962,18 @@ public:
   Deref(Valexpr *v): vexp(v)  {}
   ~Deref() { delete vexp; }
   virtual void printOn(std::ostream &out) const override { 
-    out << "Deref" << "(" << *vexp << ")";
+    out << "Deref" << "(" << *vexp << ")" <<ToString(type) << " of " <<ToString(type->oftype);
   }
 
   virtual void sem() override {
     vexp->sem();
     if(vexp->type_check(TYPE_Tref)) {
       if(vexp->getVal()==TYPE_Unknown) {
-        vexp->type_inf(new Tref(new Tunknown()));
+        vexp->changeType(new Tref(new Tunknown()));
+        vexp->type_inf(vexp->getType());
       }
+      this->refs2type.push_back(vexp);
+      vexp->types2of.push_back(this);
       type = vexp->getType()->oftype;
     }
     else{
@@ -2065,7 +2064,8 @@ public:
         }
         else {
           if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->getType()->val!=TYPE_Unknown) {
-            ves[i]->type_inf(vtypes[i]->getType());
+            ves[i]->changeType(vtypes[i]->getType());
+            ves[i]->type_inf(ves[i]->getType());
           }
           if(argtypes[i]->val!=TYPE_Unknown && vtypes[i]->getType()->val==TYPE_Unknown) {
             vtypes[i]->changeType(argtypes[i]);
@@ -2076,16 +2076,6 @@ public:
         }
       }
       type = idd->getType();
-      for (int j=0; j<int(vtypes.size()); j++) {
-        for (SymbolEntry* s : vtypes[j]->same) {
-          if(std::find(vtypes.begin(), vtypes.end(), s) != vtypes.end()) {
-            copy[j]->same.push_back(s->getNext());
-          }
-          else {
-            copy[j]->same.push_back(s);
-          }
-        }
-      }
       for (SymbolEntry* v : vtypes) {delete v;}
       idd->changeVector(copy);
 
@@ -2111,7 +2101,8 @@ public:
         }
         else {
           if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->getType()->val!=TYPE_Unknown) {
-            ves[i]->type_inf(vtypes[i]->getType());
+            ves[i]->changeType(vtypes[i]->getType());
+            ves[i]->type_inf(ves[i]->getType());
           }          
         }
       }

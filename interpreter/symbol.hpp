@@ -8,8 +8,73 @@
 #include "AST_main.hpp"
 #include "type.hpp"
 
+class SymbolEntry;
+
+class Expr: public AST {
+public:
+  bool type_check(Types t) {
+    if(type->val==TYPE_Unknown || t==TYPE_Unknown) {
+      return true;
+    }
+    else if (type->val == t) return true;
+    else return false;
+  }
+
+  Type *getType() {
+    return type;
+  }
+
+  Types getVal() {
+    return type->val;
+  }
+
+  Types getOfval() {
+    return type->oftype->val;
+  }
+
+  virtual void type_inf(Type* t) {}
+
+  virtual SymbolEntry* inf_name() {
+    return nullptr;
+  }
+
+  virtual char* get_name() {
+    return nullptr;
+  }
+
+  virtual void changeType(Type* t) {
+    type = t; 
+    for (Expr* e : same) {
+      if(e->getType()->val==TYPE_Unknown) {
+        e->changeType(t);
+        e->type_inf(t);
+      }
+    }
+    for (Expr* e : refs2type) {
+      if(e->getType()->oftype->val==TYPE_Unknown) {
+        e->changeType(new Tref(t));
+      }
+    }
+    for (Expr* e : types2of) {
+      e->changeType(t->oftype);
+    } 
+  }
+
+  std::vector<Expr* > same;
+  std::vector<Types > illegal;
+  std::vector<Types > ofillegal;
+  std::vector<Expr* > refs2type;
+  std::vector<Expr* > types2of;
+
+protected:
+  Type *type;  
+};
+
 inline const char* ToString(Type* t)
 {
+    if (t==nullptr){
+      return "null";
+    }
     switch (t->val)
     {
         case TYPE_Unit:   return "unit";
@@ -64,8 +129,7 @@ class SymbolEntry {
       return vt;
     }
 
-    std::vector<SymbolEntry* > same;
-    std::vector<Types > illegal;
+    std::vector<Expr* > exlist;
 
   protected:
     Entry_Type entry_type;
@@ -89,17 +153,10 @@ class SymVariable: public SymbolEntry {
   }
 
   virtual void changeType(Type* t) override {
-    if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
-      fprintf(stderr, "Error! Not valid type here.\n");
-      exit(1);
-    }
     type->oftype = t;
-    for (SymbolEntry* s : same) {
-      if (s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)){
-        s->changeType(t);
-      }
+    for (Expr* e : exlist) {
+      e->changeType(type);
     }
-
   } 
 
     Type* type;
@@ -118,16 +175,10 @@ class SymConstant: public SymbolEntry {
     }
 
     virtual void changeType(Type* t) override {
-      if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
-        fprintf(stderr, "Error! Not valid type here.\n");
-        exit(1);
-      }
       type = t;
-      for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
-        s->changeType(t);
+      for (Expr* e : exlist) {
+        e->changeType(t);
       }
-    }
     }
 
     Type* type;
@@ -169,16 +220,7 @@ class SymFunction: public SymbolEntry {
 
     virtual void changeType(Type* t) override {
       
-      if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
-        fprintf(stderr, "Error! Not valid type here.\n");
-        exit(1);
-      }
       res_type = t;
-      for (SymbolEntry* s : same) {
-        if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
-          s->changeType(t);
-        }
-      }
     }
 
     virtual void changeVector(std::vector<SymbolEntry*> cv) override {
@@ -204,16 +246,8 @@ class SymIdentifier: public SymbolEntry {
     }
 
     virtual void changeType(Type* t) override {
-      if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
-        fprintf(stderr, "Error! Not valid type here.\n");
-        exit(1);
-      }
+      
       type = t;
-      for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
-        s->changeType(t);
-      }
-    }
     }
 
     Type* type;
@@ -237,16 +271,8 @@ class SymConstructor: public SymbolEntry {
     }
 
     virtual void changeType(Type* t) override {
-      if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
-        fprintf(stderr, "Error! Not valid type here.\n");
-        exit(1);
-      }
+      
       res_type = t;
-      for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr  && s->getType()->oftype->val==TYPE_Unknown)) {
-        s->changeType(t);
-      }
-    }
     }
 
     Type* res_type;
@@ -269,22 +295,15 @@ class SymParameter: public SymbolEntry {
 
     virtual SymbolEntry* copy() override {
       SymbolEntry* se =  new SymParameter(next, type);
-      se->illegal = illegal;
       next = se;
       return se;
     }
 
     virtual void changeType(Type* t) override {
-      if(std::find(illegal.begin(), illegal.end(), t->val) != illegal.end()) {
-        fprintf(stderr, "Error! Not valid type here.\n");
-        exit(1);
-      }
       type = t;
-      for (SymbolEntry* s : same) {
-      if(s->getType()->val==TYPE_Unknown || (s->getType()->oftype!=nullptr && s->getType()->oftype->val==TYPE_Unknown)) {
-        s->changeType(t);
+      for (Expr* e : exlist) {
+        e->changeType(t);
       }
-    }
     }
 
     Type* type;

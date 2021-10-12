@@ -1,3 +1,6 @@
 let mutable y
+let mutable x
 
-let x = !y + 3
+let a = !!y == !!x
+
+let b = !!y + 7
