@@ -8,67 +8,7 @@
 #include "AST_main.hpp"
 #include "type.hpp"
 
-class SymbolEntry;
-
-class Expr: public AST {
-public:
-  bool type_check(Types t) {
-    if(type->val==TYPE_Unknown || t==TYPE_Unknown) {
-      return true;
-    }
-    else if (type->val == t) return true;
-    else return false;
-  }
-
-  Type *getType() {
-    return type;
-  }
-
-  Types getVal() {
-    return type->val;
-  }
-
-  Types getOfval() {
-    return type->oftype->val;
-  }
-
-  virtual void type_inf(Type* t) {}
-
-  virtual SymbolEntry* inf_name() {
-    return nullptr;
-  }
-
-  virtual char* get_name() {
-    return nullptr;
-  }
-
-  virtual void changeType(Type* t) {
-    type = t; 
-    for (Expr* e : same) {
-      if(e->getType()->val==TYPE_Unknown) {
-        e->changeType(t);
-        e->type_inf(t);
-      }
-    }
-    for (Expr* e : refs2type) {
-      if(e->getType()->oftype->val==TYPE_Unknown) {
-        e->changeType(new Tref(t));
-      }
-    }
-    for (Expr* e : types2of) {
-      e->changeType(t->oftype);
-    } 
-  }
-
-  std::vector<Expr* > same;
-  std::vector<Types > illegal;
-  std::vector<Types > ofillegal;
-  std::vector<Expr* > refs2type;
-  std::vector<Expr* > types2of;
-
-protected:
-  Type *type;  
-};
+class Expr;
 
 inline const char* ToString(Type* t)
 {
@@ -135,7 +75,74 @@ class SymbolEntry {
     Entry_Type entry_type;
     SymbolEntry *next;
     
+};
 
+class Expr: public AST {
+  
+public:
+
+  bool type_check(Types t) {
+    if(type->val==TYPE_Unknown || t==TYPE_Unknown) {
+      return true;
+    }
+    else if (type->val == t) return true;
+    else return false;
+  }
+
+  Type *getType() {
+    return type;
+  }
+
+  Types getVal() {
+    return type->val;
+  }
+
+  Types getOfval() {
+    return type->oftype->val;
+  }
+
+  virtual void type_inf(Type* t) {}
+
+  virtual SymbolEntry* inf_name() {
+    return nullptr;
+  }
+
+  virtual char* get_name() {
+    return nullptr;
+  }
+
+  virtual void changeType(Type* t) {
+    type = t; 
+    for (Expr* e : same) {
+      if(e->getType()->val==TYPE_Unknown) {
+        e->changeType(t);
+        e->type_inf(t);
+      }
+    }
+    for (Expr* e : refs2type) {
+      if(e->getType()->oftype->val==TYPE_Unknown) {
+        e->changeType(new Tref(t));
+      }
+    }
+    for (Expr* e : types2of) {
+      e->changeType(t->oftype);
+    }
+    for (SymbolEntry* s : symbols) {
+      if(s->getType()->val==TYPE_Unknown) {
+        s->changeType(t);
+      }
+    } 
+  }
+
+  std::vector<Expr* > same;
+  std::vector<Types > illegal;
+  std::vector<Types > ofillegal;
+  std::vector<Expr* > refs2type;
+  std::vector<Expr* > types2of;
+  std::vector<SymbolEntry* > symbols;
+
+protected:
+  Type *type;  
 };
 
 extern std::unordered_map<std::string, SymbolEntry*> globals;
@@ -221,6 +228,9 @@ class SymFunction: public SymbolEntry {
     virtual void changeType(Type* t) override {
       
       res_type = t;
+      for (Expr* e : exlist) {
+        e->changeType(t);
+      }
     }
 
     virtual void changeVector(std::vector<SymbolEntry*> cv) override {
@@ -273,6 +283,9 @@ class SymConstructor: public SymbolEntry {
     virtual void changeType(Type* t) override {
       
       res_type = t;
+      for (Expr* e : exlist) {
+        e->changeType(t);
+      }
     }
 
     Type* res_type;

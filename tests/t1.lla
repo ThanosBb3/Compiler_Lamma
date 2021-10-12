@@ -1,6 +1,15 @@
 let mutable y
 let mutable x
+let mutable k
+let z = !!y
 
 let a = !!y == !!x
 
 let b = !!y + 7
+let a = z + 7
+
+let s = 1;2.3;!k
+
+let a = s+.2.1
+
+let twice f x = f (f x)
