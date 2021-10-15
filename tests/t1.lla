@@ -1,15 +1,10 @@
-let mutable y
-let mutable x
-let mutable k
-let z = !!y
+let mutable p [20]
+let mutable d
 
-let a = !!y == !!x
+let b = p[17] := !d
 
-let b = !!y + 7
-let a = z + 7
+let y = p[2] := 6
 
-let s = 1;2.3;!k
+let mutable t
 
-let a = s+.2.1
-
-let twice f x = f (f x)
+let u = !t +. 5.6

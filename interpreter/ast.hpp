@@ -1119,7 +1119,7 @@ public:
     iden(id), tp(t) {}
   ~Par() { delete iden; delete tp; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Parameter(" << iden << ToString(type);
+    out << "Parameter(" << iden << ToString(type) << " of " << ToString(type->oftype);
     if(tp != nullptr) out << " of type " << *tp;
     out << " )"; 
   }
@@ -1383,6 +1383,10 @@ public:
             idd = st.lookup(iden);
             idd->exlist.push_back(exp);
             exp->symbols.push_back(idd);
+            if(exp->getType()->val!=TYPE_Unknown){
+              idd->changeType(exp->getType());
+            }
+            
           }
           else {
             std::vector<SymbolEntry*> vt;
@@ -1948,6 +1952,8 @@ public:
           e->type_inf(e->getType());
         }
       }
+      sameof.push_back(arr);
+      arr->exoflist.push_back(this);
       type = new Tref(arr->getType()->oftype);
       }
     else {
@@ -2090,9 +2096,15 @@ public:
             ves[i]->changeType(vtypes[i]->getType());
             ves[i]->type_inf(ves[i]->getType());
           }
+          else if((argtypes[i]->oftype!=nullptr && vtypes[i]->getType()->oftype!=nullptr) && (argtypes[i]->oftype->val==TYPE_Unknown && vtypes[i]->getType()->oftype->val!=TYPE_Unknown)) {
+            ves[i]->changeType(vtypes[i]->getType());
+            ves[i]->type_inf(ves[i]->getType());
+          }
           if(argtypes[i]->val!=TYPE_Unknown && vtypes[i]->getType()->val==TYPE_Unknown) {
+            vtypes[i]->changeType(argtypes[i]);  
+          }
+          else if((argtypes[i]->oftype!=nullptr && vtypes[i]->getType()->oftype!=nullptr) && (argtypes[i]->oftype->val!=TYPE_Unknown && vtypes[i]->getType()->oftype->val==TYPE_Unknown)) {
             vtypes[i]->changeType(argtypes[i]);
-            
           }
           
           
@@ -2437,6 +2449,7 @@ public:
               
               clist->sem(tt);
               type = clist->getctype();
+              fprintf(stderr, "\n Error %s \n", ToString(type));
             }
             else {
               fprintf(stderr, "Error: %s\n", "Not found a type of this name by the programmer!!!");

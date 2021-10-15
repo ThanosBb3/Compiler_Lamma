@@ -70,6 +70,7 @@ class SymbolEntry {
     }
 
     std::vector<Expr* > exlist;
+    std::vector<Expr* > exoflist;
 
   protected:
     Entry_Type entry_type;
@@ -119,6 +120,21 @@ public:
         e->type_inf(t);
       }
     }
+
+    for (SymbolEntry* s : sameof) {
+      if(s->getEType()==ENTRY_VARIABLE) {
+        if(s->getType()->oftype->val==TYPE_Unknown){
+          s->changeType(t->oftype);
+        }
+      }
+      else if (s->getEType()==ENTRY_PARAMETER) {
+        if(s->getType()->oftype->val==TYPE_Unknown){
+          int size = s->getType()->size;
+          s->changeType(new Array(t->oftype, size));
+        }
+      }
+    }
+
     for (Expr* e : refs2type) {
       if(e->getType()->oftype->val==TYPE_Unknown) {
         e->changeType(new Tref(t));
@@ -135,6 +151,7 @@ public:
   }
 
   std::vector<Expr* > same;
+  std::vector<SymbolEntry* > sameof;
   std::vector<Types > illegal;
   std::vector<Types > ofillegal;
   std::vector<Expr* > refs2type;
@@ -163,6 +180,11 @@ class SymVariable: public SymbolEntry {
     type->oftype = t;
     for (Expr* e : exlist) {
       e->changeType(type);
+    }
+    for (Expr* e : exoflist) {
+      if(e->getType()->oftype->val==TYPE_Unknown){
+        e->changeType(new Tref(type->oftype));
+      }
     }
   } 
 
