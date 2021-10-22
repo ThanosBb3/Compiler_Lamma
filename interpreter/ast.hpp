@@ -94,7 +94,7 @@ public:
   Binop(Expr *l, OPS o, Expr *r): left(l), op(o), right(r) {}
   ~Binop() { delete left; delete right; }
   virtual void printOn(std::ostream &out) const override {
-    out <<  "(" << *left << ToString(left->getType()) << ", " << *right << ToString(right->getType()) << ")";
+    out <<  "(" << *left << ", " << *right << ")" << *type;
   }
 
   virtual void sem() override {
@@ -464,7 +464,7 @@ public:
   Unop(OPS o, Expr *r): op(o), right(r) {}
   ~Unop() { delete right; }
   virtual void printOn(std::ostream &out) const override {
-    out <<  "(" << *right << ")";
+    out <<  "(" << *right << ")" << *type;
   }
 
   virtual void sem() override {
@@ -557,7 +557,7 @@ public:
   Delete(Expr *e): exp(e) {}
   ~Delete() { delete exp; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Delete" << "(" << *exp << ")" << ToString(exp->getType()); 
+    out << "Delete" << "(" << *exp << ")" << *type; 
   }
 
   virtual void sem() override {
@@ -592,9 +592,9 @@ public:
     cond(c), stmt1(s1), stmt2(s2) {}
   ~If() { delete cond; delete stmt1; delete stmt2; }
   virtual void printOn(std::ostream &out) const override {
-    out << "If(" << *cond << ", " << *stmt1 << ToString(stmt1->getType());
-    if (stmt2 != nullptr) out << ", " << *stmt2 << ToString(stmt2->getType());
-    out << ")";
+    out << "If(" << *cond << ", " << *stmt1;
+    if (stmt2 != nullptr) out << ", " << *stmt2;
+    out << ")" << *type;
   }
 
   virtual void sem() override {
@@ -633,8 +633,13 @@ public:
           stmt2->same.push_back(stmt1);
 
         }
-      }
       type = stmt1->getType(); 
+      }
+      else {
+        type = new Unit();
+        stmt1->changeType(type);
+        stmt1->type_inf(type);
+      }
     }
     else {
         fprintf(stderr, "Error: %s\n", "Type Mismatch at If condition!!!");
@@ -699,7 +704,7 @@ public:
     cond(c), stmt1(s1) {}
   ~While() { delete cond; delete stmt1; }
   virtual void printOn(std::ostream &out) const override {
-    out << "While(" << *cond << ", " << *stmt1 << ")";
+    out << "While(" << *cond << ", " << *stmt1 << ")" << *type;
   }
 
   virtual void sem() override {
@@ -743,9 +748,14 @@ public:
     check(b), iden(id), cond(c), stmt1(s1), stmt2(s2) {}
   ~For() { delete iden; delete cond; delete stmt1; delete stmt2; }
   virtual void printOn(std::ostream &out) const override {
-    if (check) out << "ForDown(" << iden << ", " << *cond << ", " << *stmt1 << ", " << *stmt2 << ")";
-    out << "For(" << iden << ", " << *cond << ", " << *stmt1 << ", " << *stmt2 << ")";
+    if (check) {
+      out << "ForDown(" << iden << ", " << *cond << ", " << *stmt1 << ", " << *stmt2 << ")" << *type;
+    }
+    else {
+      out << "For(" << iden << ", " << *cond << ", " << *stmt1 << ", " << *stmt2 << ")" << *type;
+    }
   }
+
 
   virtual void sem() override {
     st.openScope();
@@ -1119,9 +1129,7 @@ public:
     iden(id), tp(t) {}
   ~Par() { delete iden; delete tp; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Parameter(" << iden << ToString(type) << " of " << ToString(type->oftype);
-    if(tp != nullptr) out << " of type " << *tp;
-    out << " )"; 
+    out << "Parameter( " << iden << " )" << *type; 
   }
 
   Type* tp2;
@@ -1547,7 +1555,7 @@ public:
   Letin(Let *l, Expr *e): let(l), expr(e) {}
   ~Letin() { delete let; delete expr; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Letin(" << *let << ", " << *expr << ")" << ToString(type);
+    out << "Letin(" << *let << ", " << *expr << ")" << *type;
   }
 
   virtual void sem() {
@@ -1578,7 +1586,7 @@ public:
   New(Type *t): tp1(t) {}
   ~New() { delete tp1; }
   virtual void printOn(std::ostream &out) const override {
-    out << "New" << "(" << *tp1 << ")"; 
+    out << "New" << "(" << *tp1 << ")" << *type; 
   }
 
   virtual void sem() {
@@ -1635,7 +1643,7 @@ public:
   virtual void printOn(std::ostream &out) const override {
     out << "Dim" << "(" << iden;
     if (ien >= 2 ) out << ", " << ien;
-    out << ")"; 
+    out << ")" << *type; 
   }
 
   virtual void sem() override{
@@ -1872,10 +1880,10 @@ public:
   ~Id() { delete name; }
   virtual void printOn(std::ostream &out) const override { 
     if (check) {
-      out << "ConstrId" << "(" << name << ")" << ToString(type) << " withID " << type->getID() ;
+      out << "ConstrId" << "(" << name << ")" << *type ;
     }
     else {
-      out << "Id" << "(" << name << ")" << ToString(type) << " of " << ToString(type->oftype);
+      out << "Id" << "(" << name << ")" << *type;
     }
   }
 
@@ -1933,7 +1941,7 @@ public:
   Arrayitem(char *s, Exprlist *l): id(s), elist(l)  {}
   ~Arrayitem() { delete id; }
   virtual void printOn(std::ostream &out) const override { 
-    out << "Arrayitem" << "(" << id << ", " << *elist << ")" << ToString(type) << " of " << ToString(type->oftype);
+    out << "Arrayitem" << "(" << id << ", " << *elist << ")" << *type;
   }
 
   virtual void sem() override{
@@ -1989,7 +1997,7 @@ public:
   Deref(Valexpr *v): vexp(v)  {}
   ~Deref() { delete vexp; }
   virtual void printOn(std::ostream &out) const override { 
-    out << "Deref" << "(" << *vexp << ")" <<ToString(type) << " of " <<ToString(type->oftype);
+    out << "Deref" << "(" << *vexp << ")" << *type;
   }
 
   virtual void sem() override {
@@ -2060,23 +2068,25 @@ public:
   Call(char *i, Valexprlist *l): id(i), list(l) {}
   ~Call() { delete id; delete list; }
   virtual void printOn(std::ostream &out) const override {
-    out << "Call" << "(" << id << ", " << *list << ")" << ToString(type);
+
+    out << "Call" << "(" << id << ", " << *list << ")" << *type;
   }
 
   virtual void sem() override {
     SymbolEntry* idd;
     idd = st.lookup(id);
     if(idd!=nullptr && idd->getEType()==ENTRY_FUNCTION){
-      idd->exlist.push_back(this);
+      //idd->exlist.push_back(this);
+      Type* told = idd->getType();
       list->sem();
       std::vector<Valexpr*> ves;
       std::vector<SymbolEntry*> vtypes;
-      //std::vector<SymbolEntry*> copy;
+      std::vector<SymbolEntry*> copy;
       std::vector<Type*> argtypes;
       vtypes = idd->getVector();
-      //for (SymbolEntry* se : vtypes) {
-      //  copy.push_back(se->copy());
-      //}
+      for (SymbolEntry* se : vtypes) {
+        copy.push_back(se->copy());
+      }
       ves = list->getVexps();
       for (Valexpr *v: ves) {
         argtypes.push_back(v->getType());
@@ -2087,6 +2097,7 @@ public:
       }
       for (int i=0; i<int(argtypes.size()); i++) {
         vtypes[i]->exlist.push_back(ves[i]);
+        ves[i]->symbols.push_back(vtypes[i]);
         if(!(vtypes[i]->getType()->type_check(argtypes[i]->val))){
           fprintf(stderr, "Error: %s\n", "Not matching parameter and argument types!!!");
           exit(1);
@@ -2110,9 +2121,13 @@ public:
           
         }
       }
+      for (Valexpr *v: ves) {
+        v->caller.push_back(this);
+      }
       type = idd->getType();
       //for (SymbolEntry* v : vtypes) {delete v;}
-      //idd->changeVector(copy);
+      idd->changeVector(copy);
+      idd->changeType(told);
 
     }
     else if(idd!=nullptr && idd->getEType()==ENTRY_CONSTRUCTOR) {
@@ -2147,6 +2162,63 @@ public:
     else {
       fprintf(stderr, "Error: %s\n", "Not function or constructor!!!");
       exit(1);
+    }
+  }
+
+  virtual void fix() override {
+    SymbolEntry* idd;
+    idd = st.lookup(id);
+    if(idd!=nullptr && idd->getEType()==ENTRY_FUNCTION){
+      //idd->exlist.push_back(this);
+      //list->sem();
+      std::vector<Valexpr*> ves;
+      std::vector<SymbolEntry*> vtypes;
+      std::vector<SymbolEntry*> copy;
+      std::vector<Type*> argtypes;
+      vtypes = idd->getVector();
+      for (SymbolEntry* se : vtypes) {
+        copy.push_back(se->copy());
+      }
+      ves = list->getVexps();
+      for (Valexpr *v: ves) {
+        argtypes.push_back(v->getType());
+      }
+      if(vtypes.size()!=argtypes.size()){
+        fprintf(stderr, "Error: %s\n", "Unequal sizes!!!");
+        exit(1);
+      }
+      for (int i=0; i<int(argtypes.size()); i++) {
+        if(!(vtypes[i]->getType()->type_check(argtypes[i]->val))){
+          fprintf(stderr, "Error: %s\n", "Not matching parameter and argument types!!!");
+          exit(1);
+        }
+        else {
+          if(argtypes[i]->val==TYPE_Unknown && vtypes[i]->getType()->val!=TYPE_Unknown) {
+            ves[i]->changeType(vtypes[i]->getType());
+            ves[i]->type_inf(ves[i]->getType());
+          }
+          
+          else if((argtypes[i]->oftype!=nullptr && vtypes[i]->getType()->oftype!=nullptr) && (argtypes[i]->oftype->val==TYPE_Unknown && vtypes[i]->getType()->oftype->val!=TYPE_Unknown)) {
+            ves[i]->changeType(vtypes[i]->getType());
+            ves[i]->type_inf(ves[i]->getType());
+          }
+          
+          if(argtypes[i]->val!=TYPE_Unknown && vtypes[i]->getType()->val==TYPE_Unknown) {
+            vtypes[i]->changeType(argtypes[i]);  
+          }
+          else if((argtypes[i]->oftype!=nullptr && vtypes[i]->getType()->oftype!=nullptr) && (argtypes[i]->oftype->val!=TYPE_Unknown && vtypes[i]->getType()->oftype->val==TYPE_Unknown)) {
+            vtypes[i]->changeType(argtypes[i]);
+          }
+          
+          
+        }
+      }
+      type = idd->getType();
+      //for (SymbolEntry* v : vtypes) {delete v;}
+      idd->changeVector(copy);
+      Type* unk = new Tunknown();
+      idd->changeType(unk);
+
     }
   }
 

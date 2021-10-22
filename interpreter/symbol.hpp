@@ -56,6 +56,10 @@ class SymbolEntry {
       return nullptr;
     }
 
+    virtual Type* getfullType() {
+      return nullptr;
+    }
+
     virtual void changeType(Type* t) {}
 
     virtual void changeVector(std::vector<SymbolEntry*> cv) {}
@@ -112,6 +116,8 @@ public:
     return nullptr;
   }
 
+  virtual void fix() {}
+
   virtual void changeType(Type* t) {
     type = t; 
     for (Expr* e : same) {
@@ -143,11 +149,22 @@ public:
     for (Expr* e : types2of) {
       e->changeType(t->oftype);
     }
+    
     for (SymbolEntry* s : symbols) {
-      if(s->getType()->val==TYPE_Unknown) {
+      if(s->getType()->val==TYPE_Unknown){
         s->changeType(t);
       }
-    } 
+    }
+    for (Expr* c : caller) {
+      c->fix();
+    }
+    /*
+    for (SymbolEntry* s : symbols) {
+      if(s->getEType()==ENTRY_FUNCTION && told->val==TYPE_Unknown) {
+        s->changeType(told);
+      }
+    }
+    */
   }
 
   std::vector<Expr* > same;
@@ -157,6 +174,7 @@ public:
   std::vector<Expr* > refs2type;
   std::vector<Expr* > types2of;
   std::vector<SymbolEntry* > symbols;
+  std::vector<Expr* > caller;
 
 protected:
   Type *type;  
@@ -237,22 +255,48 @@ class SymFunction: public SymbolEntry {
       next = n;
       par_type = vt;
       res_type = t;
+      type = ppartys(vt, 0, t);
     }
 
     virtual Type* getType() override {
       return res_type;
     }
 
+    virtual Type* getfullType() override {
+      return type;
+    } 
+
     std::vector<SymbolEntry*> getVector() override {
       return par_type;
+    }
+
+    Type* ppartys(std::vector<SymbolEntry* > vt, uint i, Type* t) {
+      Type* tp;
+      if(i<vt.size()-1) {
+        tp = new Tfun(vt[i]->getType(), ppartys(vt, i+1, t));
+        return tp;
+      }
+      /*
+      else if(i==0) {
+        fprintf(stderr, "Error: Function definition requires at least 1 parameter.");
+        exit(1);
+        return nullptr;
+      }
+      */
+      else { 
+        tp = new Tfun(vt[i]->getType(), t);
+        return tp;
+      }
     }
 
     virtual void changeType(Type* t) override {
       
       res_type = t;
-      for (Expr* e : exlist) {
-        e->changeType(t);
-      }
+      //if(t->val!=TYPE_Unknown) {
+        //for (Expr* e : exlist) {
+          //e->changeType(t);
+        //}
+      //}
     }
 
     virtual void changeVector(std::vector<SymbolEntry*> cv) override {
@@ -260,6 +304,7 @@ class SymFunction: public SymbolEntry {
     }
 
     Type* res_type;
+    Type* type;
 
   private:
     std::vector<SymbolEntry*> par_type;
@@ -331,6 +376,7 @@ class SymParameter: public SymbolEntry {
     virtual SymbolEntry* copy() override {
       SymbolEntry* se =  new SymParameter(next, type);
       next = se;
+      for (Expr* e : exlist) { se->exlist.push_back(e); }
       return se;
     }
 

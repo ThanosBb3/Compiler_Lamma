@@ -3,7 +3,7 @@
 #include <iostream>
 #include "AST_main.hpp"
 
-enum Types { TYPE_Unit, TYPE_Integer, TYPE_Boolean, TYPE_Real, TYPE_Array, TYPE_Char, TYPE_Tref, TYPE_Tfun, TYPE_Tid , TYPE_Unknown};
+enum Types { TYPE_Unit, TYPE_Integer, TYPE_Char, TYPE_Boolean, TYPE_Real, TYPE_Tref, TYPE_Array, TYPE_Tfun, TYPE_Tid , TYPE_Unknown };
 
 class Type : public AST {
   public:
@@ -30,6 +30,7 @@ class Type : public AST {
     Types val;
     Type *oftype;
     int size;
+    char* id;
 };
 
 class Unit: public Type {
@@ -38,8 +39,9 @@ public:
     val = TYPE_Unit;
     oftype = nullptr;
     size = -1;}
+
   virtual void printOn(std::ostream &out) const override {
-    out << "Unit()";
+    out << "unit";
   }
 
 };
@@ -50,8 +52,9 @@ public:
     val = TYPE_Integer;
     oftype = nullptr;
     size = -1;}
+
   virtual void printOn(std::ostream &out) const override {
-    out << "Integer()";
+    out << "int";
   }
 
 };
@@ -62,8 +65,9 @@ public:
     val = TYPE_Char;
     oftype = nullptr;
     size = -1;}
+
   virtual void printOn(std::ostream &out) const override {
-    out << "Char()";
+    out << "char";
   }
 
 };
@@ -74,10 +78,10 @@ public:
     val = TYPE_Boolean;
     oftype = nullptr;
     size = -1;}
-  virtual void printOn(std::ostream &out) const override {
-    out << "Boolean()";
-  }
 
+  virtual void printOn(std::ostream &out) const override {
+    out << "bool";
+  }
 
 };
 
@@ -87,52 +91,28 @@ public:
     val = TYPE_Real;
     oftype = nullptr;
     size = -1;}
+
   virtual void printOn(std::ostream &out) const override {
-    out << "Real()";
+    out << "real";
   }
 
-};
-
-
-class Typeid: public Type {
-public:
-  Typeid(char *i) { val = TYPE_Tid; oftype = nullptr; size = -1; id = i;}
-  ~Typeid() { delete id; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Typeid (" << id << ")";
-  }
-
-  char* getID() override {
-    return id;
-  }
-
-private:
-  char *id;
-};
-
-class Tfun: public Type {
-public:
-  Tfun(Type *l, Type *r) { val = TYPE_Tfun; tleft = l; tright = r; oftype = nullptr; size = -1;}
-  ~Tfun() { delete tleft; delete tright; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Tfun ("; tleft->printOn(out); out << " -> "; tright->printOn(out); out <<")";
-  }
-private:
-  Type *tleft;
-  Type *tright;
 };
 
 class Tref: public Type {
 public:
   Tref(Type *t) {
     val = TYPE_Tref;
+    if(t->val==TYPE_Array){
+      fprintf(stderr, "Error: Cannot implement reference to array.");
+      exit(1);
+    }
     oftype = t;
     size = -1;
   }
+
   virtual void printOn(std::ostream &out) const override {
-    out << "Tref (";
     oftype->printOn(out); 
-    out << ")";
+    out << " ref";
   }
 
 };
@@ -141,18 +121,81 @@ class Array: public Type {
 public:
   Array(Type *t, int dims = -1) {
     val = TYPE_Array;
+    if(t->val==TYPE_Array){
+      fprintf(stderr, "Error: Cannot implement array of arrays.");
+      exit(1);
+    }
+    oftype = t;
     if(dims>0) size = dims;
     else size = -1;
-    oftype = t;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Array (Type: "; oftype->printOn(out);
-    if(size>=0) out << " and size " << size;
-    out << " )";
   }
 
+  virtual void printOn(std::ostream &out) const override {
+    out << "array"; 
+    if(size>1) {
+      out << " [*";
+      for (int i=1; i<size; i++) {
+        out << ",*";
+      }
+      out << "]";
+    }
+    out << " of ";
+    oftype->printOn(out);
+  }
 
 };
+
+class Tfun: public Type {
+public:
+  Tfun(Type *l, Type *r) { 
+    val = TYPE_Tfun; 
+    left = l;
+    if(r->val==TYPE_Array){
+      fprintf(stderr, "Error: Cannot implement function that returns array.");
+      exit(1);
+    }
+    /*
+    else if(r->val==TYPE_Tfun){
+      fprintf(stderr, "Error: Cannot implement function that returns function.");
+      exit(1);
+    }
+    */
+    right = r;
+    oftype = nullptr; 
+    size = -1;
+  }
+
+  virtual void printOn(std::ostream &out) const override {
+    left->printOn(out);
+    out << " -> ";
+    right->printOn(out);
+  }
+
+private:
+  Type* left;
+  Type* right;
+};
+
+class Typeid: public Type {
+public:
+  Typeid(char *i) {
+    val = TYPE_Tid; 
+    oftype = nullptr; 
+    size = -1; 
+    id = i;
+  }
+
+  virtual void printOn(std::ostream &out) const override {
+    out << "type " << id;
+  }
+
+  char* getID() override {
+    return id;
+  }
+
+};
+
+
 
 class Tunknown: public Type {
 public:
@@ -162,7 +205,7 @@ public:
     size = INT8_MAX;
   }
   virtual void printOn(std::ostream &out) const override {
-    out << "T_unknown";
+    out << "unknown";
   }
 
 };

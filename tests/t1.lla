@@ -1,10 +1,11 @@
-let mutable p [20]
-let mutable d
+let mutable x
 
-let b = p[17] := !d
+let inc a = a
 
-let y = p[2] := 6
+let g = inc 6.8
 
-let mutable t
+let p = inc !x
 
-let u = !t +. 5.6
+let c = !x + 7
+
+let o = inc 35.7
